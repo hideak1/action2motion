@@ -42,6 +42,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
         data = dataset.MotionFolderDatasetHumanAct12(opt.data_root, opt, lie_enforce=opt.lie_enforce)
+        label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -113,8 +114,8 @@ if __name__ == '__main__':
     val_dataset = ActionTokenDataset(data, opt, w_vectorizer)
 
     train_loader = DataLoader(train_dataset, batch_size=opt.batch_size, drop_last=True, num_workers=0,
-                              shuffle=True, pin_memory=True)
+                              shuffle=True, pin_memory=False)
     val_loader = DataLoader(val_dataset, batch_size=opt.batch_size, drop_last=True, num_workers=0,
-                            shuffle=True, pin_memory=True)
+                            shuffle=True, pin_memory=False)
 
     trainer.train(train_loader, val_loader, None)

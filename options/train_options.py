@@ -72,8 +72,6 @@ class Action2MotionOptions(TrainOptions):
 
         self.parser.add_argument('--proj_share_weight', action="store_true", help='Training iterations')
 
-        self.parser.add_argument('--tokenizer_name', type=str, default="motiontokens", help='Name of this trial')
-
         self.parser.add_argument('--label_smoothing', action='store_true')
         self.is_train = True
 

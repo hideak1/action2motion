@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     all_loader = DataLoader(all_dataset, batch_size=1, num_workers=1, pin_memory=True)
 
-    token_data_dir = pjoin(opt.data_root, opt.name)
+    token_data_dir = pjoin(opt.data_root, opt.tokenizer_name)
     os.makedirs(token_data_dir, exist_ok=True)
 
     start_token = opt.codebook_size
@@ -136,14 +136,13 @@ if __name__ == '__main__':
         for e in range(num_replics):
             for i, data in enumerate(tqdm(all_loader)):
                 motion, name = data
-                # class_type = enumerator[label_dec[name[0] - 1]]
+                class_type = enumerator[label_dec[name[0] - 1]]
                 motion = motion.detach().to(opt.device).float()
                 pre_latents = vq_encoder(motion[..., :-4])
                 indices = quantizer.map2index(pre_latents)
                 indices = list(indices.cpu().numpy())
                 # indices = [start_token] + indices + [end_token] + [pad_token] * (max_length - len(indices) - 2)
                 indices = [str(token) for token in indices]
-                with cs.open(pjoin(token_data_dir, '%s.txt'%name[0]), 'a+') as f:
-                    if e!= 0:
-                        f.write('\n')
+                with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
                     f.write(' '.join(indices))
+                    f.write('\n')

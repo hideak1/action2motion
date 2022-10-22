@@ -18,30 +18,31 @@ from tqdm import tqdm
 from data import dataset
 
 def plot(data, label):
-    class_type = label
-    motion_orig = data
-    if not os.path.exists(result_path):
-        os.makedirs(result_path)
-    keypoint_path = os.path.join(result_path, 'keypoint')
-    if not os.path.exists(keypoint_path):
-        os.makedirs(keypoint_path)
-    file_name = os.path.join(result_path, class_type + str(i) + ".gif")
-    offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
-                                    motion_orig.shape[0], joints_num)
+    for i in range(data.shape[0]):
+        class_type = label
+        motion_orig = data[i]
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+        keypoint_path = os.path.join(result_path, 'keypoint')
+        if not os.path.exists(keypoint_path):
+            os.makedirs(keypoint_path)
+        file_name = os.path.join(result_path, class_type + str(i) + ".gif")
+        offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
+                                        motion_orig.shape[0], joints_num)
 
-    motion_mat = motion_orig - offset
+        motion_mat = motion_orig - offset
 
-    motion_mat = motion_mat.reshape(-1, joints_num, 3)
-    np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
+        motion_mat = motion_mat.reshape(-1, joints_num, 3)
+        np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
 
-    if opt.dataset_type == "humanact12":
-        plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
+        if opt.dataset_type == "humanact12":
+            plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
 
-    elif opt.dataset_type == "ntu_rgbd_vibe":
-        plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
+        elif opt.dataset_type == "ntu_rgbd_vibe":
+            plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
 
-    elif opt.dataset_type == "mocap":
-        plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80, dataset="mocap")
+        elif opt.dataset_type == "mocap":
+            plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80, dataset="mocap")
 
 
 def build_models(opt):
@@ -124,5 +125,5 @@ if __name__ == '__main__':
             vq_latent = quantizer.get_codebook_entry(m_token)
             gen_motion = vq_decoder(vq_latent)
 
-            plot_t2m(gen_motion.cpu().numpy(), i)
+            plot(gen_motion.cpu().numpy(), str(i))
 
