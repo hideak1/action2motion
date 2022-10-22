@@ -27,7 +27,7 @@ def loadVQModel(opt):
     vq_encoder = VQEncoderV3(input_size - 4, enc_channels, opt.n_down)
     # vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)
     quantizer = Quantizer(opt.codebook_size, opt.dim_vq_latent, opt.lambda_beta)
-    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.name, 'model', 'finest.tar'),
+    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.tokenizer_name, 'model', 'finest.tar'),
                             map_location=opt.device)
     vq_encoder.load_state_dict(checkpoint['vq_encoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
@@ -37,7 +37,7 @@ def loadVQModel(opt):
 if __name__ == '__main__':
     parser = TrainOptions()
     opt = parser.parse()
-
+    enumerator = None
     opt.is_train = False
 
     opt.device = torch.device("cpu" if opt.gpu_id==-1 else "cuda:" + str(opt.gpu_id))
@@ -56,8 +56,10 @@ if __name__ == '__main__':
         opt.data_root = "./dataset/humanact12"
         input_size = 72
         joints_num = 24
+        label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
+        enumerator = paramUtil.humanact12_coarse_action_enumerator
         data = dataset.MotionFolderDatasetHumanAct12(opt.data_root, opt, lie_enforce=opt.lie_enforce)
 
     elif opt.dataset_type == "mocap":
@@ -67,7 +69,9 @@ if __name__ == '__main__':
         joints_num = 20
         raw_offsets = paramUtil.mocap_raw_offsets
         kinematic_chain = paramUtil.mocap_kinematic_chain
+        label_dec = [0, 1, 2, 3, 4, 5, 6, 7]
         data = dataset.MotionFolderDatasetMocap(clip_path, opt.data_root, opt)
+        enumerator = paramUtil.mocap_action_enumerator
 
     elif opt.dataset_type == "ntu_rgbd_vibe":
         file_prefix = "./dataset"
@@ -77,8 +81,10 @@ if __name__ == '__main__':
         labels = paramUtil.ntu_action_labels
         raw_offsets = paramUtil.vibe_raw_offsets
         kinematic_chain = paramUtil.vibe_kinematic_chain
+        label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
                                               offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+        enumerator = paramUtil.ntu_action_enumerator
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 
@@ -130,13 +136,14 @@ if __name__ == '__main__':
         for e in range(num_replics):
             for i, data in enumerate(tqdm(all_loader)):
                 motion, name = data
+                # class_type = enumerator[label_dec[name[0] - 1]]
                 motion = motion.detach().to(opt.device).float()
                 pre_latents = vq_encoder(motion[..., :-4])
                 indices = quantizer.map2index(pre_latents)
                 indices = list(indices.cpu().numpy())
                 # indices = [start_token] + indices + [end_token] + [pad_token] * (max_length - len(indices) - 2)
                 indices = [str(token) for token in indices]
-                with cs.open(pjoin(token_data_dir, '%s.txt'%name[0][0]), 'a+') as f:
+                with cs.open(pjoin(token_data_dir, '%s.txt'%name[0]), 'a+') as f:
                     if e!= 0:
                         f.write('\n')
                     f.write(' '.join(indices))
