@@ -1,0 +1,142 @@
+import os
+
+from os.path import join as pjoin
+
+import utils.paramUtil as paramUtil
+from options.train_options import TrainOptions
+from utils.plot_script import *
+
+from networks.modules import *
+from networks.quantizer import *
+from data import dataset
+from tqdm import tqdm
+from torch.utils.data import DataLoader
+import codecs as cs
+
+
+# def plot_t2m(data, save_dir):
+#     data = train_dataset.inv_transform(data)
+#     for i in range(len(data)):
+#         joint_data = data[i]
+#         joint = recover_from_ric(torch.from_numpy(joint_data).float(), opt.joints_num).numpy()
+#         save_path = pjoin(save_dir, '%02d.mp4' % (i))
+#         plot_3d_motion(save_path, kinematic_chain, joint, title="None", fps=fps, radius=radius)
+
+
+def loadVQModel(opt):
+    vq_encoder = VQEncoderV3(input_size - 4, enc_channels, opt.n_down)
+    # vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)
+    quantizer = Quantizer(opt.codebook_size, opt.dim_vq_latent, opt.lambda_beta)
+    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.name, 'model', 'finest.tar'),
+                            map_location=opt.device)
+    vq_encoder.load_state_dict(checkpoint['vq_encoder'])
+    quantizer.load_state_dict(checkpoint['quantizer'])
+    return vq_encoder, quantizer
+
+
+if __name__ == '__main__':
+    parser = TrainOptions()
+    opt = parser.parse()
+
+    opt.is_train = False
+
+    opt.device = torch.device("cpu" if opt.gpu_id==-1 else "cuda:" + str(opt.gpu_id))
+    torch.autograd.set_detect_anomaly(True)
+    if opt.gpu_id != -1:
+        torch.cuda.set_device(opt.gpu_id)
+
+    opt.save_root = pjoin(opt.checkpoints_dir, opt.dataset_type, opt.name)
+    opt.model_dir = pjoin(opt.save_root, 'model')
+    opt.meta_dir = pjoin(opt.save_root, 'meta')
+
+    os.makedirs(opt.model_dir, exist_ok=True)
+    os.makedirs(opt.meta_dir, exist_ok=True)
+
+    if opt.dataset_type == "humanact12":
+        opt.data_root = "./dataset/humanact12"
+        input_size = 72
+        joints_num = 24
+        raw_offsets = paramUtil.humanact12_raw_offsets
+        kinematic_chain = paramUtil.humanact12_kinematic_chain
+        data = dataset.MotionFolderDatasetHumanAct12(opt.data_root, opt, lie_enforce=opt.lie_enforce)
+
+    elif opt.dataset_type == "mocap":
+        opt.data_root = "./dataset/mocap/mocap_3djoints/"
+        clip_path = './dataset/mocap/pose_clip.csv'
+        input_size = 60
+        joints_num = 20
+        raw_offsets = paramUtil.mocap_raw_offsets
+        kinematic_chain = paramUtil.mocap_kinematic_chain
+        data = dataset.MotionFolderDatasetMocap(clip_path, opt.data_root, opt)
+
+    elif opt.dataset_type == "ntu_rgbd_vibe":
+        file_prefix = "./dataset"
+        motion_desc_file = "ntu_vibe_list.txt"
+        joints_num = 18
+        input_size = 54
+        labels = paramUtil.ntu_action_labels
+        raw_offsets = paramUtil.vibe_raw_offsets
+        kinematic_chain = paramUtil.vibe_kinematic_chain
+        data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
+                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+    else:
+        raise NotImplementedError('This dataset is unregonized!!!')
+
+    # mean = np.load(pjoin(opt.meta_dir, 'mean.npy'))
+    # std = np.load(pjoin(opt.meta_dir, 'std.npy'))
+
+    # all_split_file = pjoin(opt.data_root, 'all.txt')
+
+    enc_channels = [1024, opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, 1024, input_size]
+
+    vq_encoder, quantizer = loadVQModel(opt)
+
+    all_params = 0
+    pc_vq_enc = sum(param.numel() for param in vq_encoder.parameters())
+    print(vq_encoder)
+    print("Total parameters of encoder net: {}".format(pc_vq_enc))
+    all_params += pc_vq_enc
+
+    pc_quan = sum(param.numel() for param in quantizer.parameters())
+    print(quantizer)
+    print("Total parameters of codebook: {}".format(pc_quan))
+    all_params += pc_quan
+
+    print('Total parameters of all models: {}'.format(all_params))
+
+    all_dataset = dataset.MotionDataset(data, opt)
+
+    all_loader = DataLoader(all_dataset, batch_size=1, num_workers=1, pin_memory=True)
+
+    token_data_dir = pjoin(opt.data_root, opt.name)
+    os.makedirs(token_data_dir, exist_ok=True)
+
+    start_token = opt.codebook_size
+    end_token = opt.codebook_size + 1
+    pad_token = opt.codebook_size + 2
+
+    max_length = 55
+    num_replics = 5
+    opt.unit_length = 4
+
+    vq_encoder.to(opt.device)
+    quantizer.to(opt.device)
+    vq_encoder.eval()
+    quantizer.eval()
+    with torch.no_grad():
+        # Since our dataset loader introduces some randomness (not much), we could generate multiple token sequences
+        # to increase the robustness.
+        for e in range(num_replics):
+            for i, data in enumerate(tqdm(all_loader)):
+                motion, name = data
+                motion = motion.detach().to(opt.device).float()
+                pre_latents = vq_encoder(motion[..., :-4])
+                indices = quantizer.map2index(pre_latents)
+                indices = list(indices.cpu().numpy())
+                # indices = [start_token] + indices + [end_token] + [pad_token] * (max_length - len(indices) - 2)
+                indices = [str(token) for token in indices]
+                with cs.open(pjoin(token_data_dir, '%s.txt'%name[0][0]), 'a+') as f:
+                    if e!= 0:
+                        f.write('\n')
+                    f.write(' '.join(indices))
