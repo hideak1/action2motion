@@ -127,7 +127,7 @@ if __name__ == '__main__':
     #     print(name, ':', parameters.size())
         # parm[name] = parameters.detach().numpy()
 
-    # discriminator = VQDiscriminator(dim_pose, opt.dim_vq_dis_hidden, opt.n_layers_dis)
+    discriminator = VQDiscriminator(input_size, opt.dim_vq_dis_hidden, opt.n_layers_dis)
 
     all_params = 0
     pc_vq_enc = sum(param.numel() for param in vq_encoder.parameters())
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
     print('Total parameters of all models: {}'.format(all_params))
 
-    trainer = VQTokenizerTrainerV3(opt, vq_encoder, quantizer, vq_decoder)
+    trainer = VQTokenizerTrainerV3(opt, vq_encoder, quantizer, vq_decoder, discriminator)
 
     # train_dataset = data
     # val_dataset = data

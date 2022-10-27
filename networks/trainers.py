@@ -569,6 +569,18 @@ class VQTokenizerTrainerV3(Trainer):
         self.loss_rec_mot = self.l1_criterion(self.recon_motions, self.motions)
         self.loss_G = self.loss_rec_mot + self.embedding_loss
 
+        if self.opt.start_use_gan:
+            _, logits_fake = self.discriminator(self.recon_motions)
+            self.loss_G_adv = -torch.mean(logits_fake)
+            # last_layer = self.vq_decoder.main[9].weight
+            #
+            # try:
+            #     self.d_weight = self.calculate_adaptive_weight(self.loss_rec_mot, self.loss_G_adv, last_layer=last_layer)
+            # except RuntimeError:
+            #     assert not self.opt.is_train
+            #     self.d_weight = torch.tensor(0.0)
+            # self.loss_G += self.d_weight * self.loss_G_adv
+            self.loss_G += self.opt.lambda_adv * self.loss_G_adv
 
     def backward_D(self):
         self.real_feats, real_labels = self.discriminator(self.motions.detach())
@@ -581,6 +593,12 @@ class VQTokenizerTrainerV3(Trainer):
     def update(self):
         loss_logs = OrderedDict({})
 
+        if self.opt.start_use_gan:
+            self.zero_grad([self.opt_discriminator])
+            self.backward_D()
+            self.loss_D.backward(retain_graph=True)
+            self.step([self.opt_discriminator])
+
         self.zero_grad([self.opt_vq_encoder, self.opt_quantizer, self.opt_vq_decoder])
         self.backward_G()
         self.loss_G.backward()
@@ -591,6 +609,10 @@ class VQTokenizerTrainerV3(Trainer):
         loss_logs['loss_G_emb'] = self.embedding_loss.item()
         loss_logs['perplexity'] = self.perplexity.item()
 
+        if self.opt.start_use_gan:
+            # loss_logs['d_weight'] = self.d_weight.item()
+            loss_logs['loss_G_adv'] = self.loss_G_adv.item()
+            loss_logs['loss_D'] = self.loss_D.item()
         return loss_logs
 
     def save(self, file_name, ep, total_it):
@@ -598,12 +620,12 @@ class VQTokenizerTrainerV3(Trainer):
             'vq_encoder': self.vq_encoder.state_dict(),
             'quantizer': self.quantizer.state_dict(),
             'vq_decoder': self.vq_decoder.state_dict(),
-            # 'discriminator': self.discriminator.state_dict(),
+            'discriminator': self.discriminator.state_dict(),
 
             'opt_vq_encoder': self.opt_vq_encoder.state_dict(),
             'opt_quantizer': self.opt_quantizer.state_dict(),
             'opt_vq_decoder': self.opt_vq_decoder.state_dict(),
-            # 'opt_discriminator': self.opt_discriminator.state_dict(),
+            'opt_discriminator': self.opt_discriminator.state_dict(),
 
             'ep': ep,
             'total_it': total_it,
@@ -651,15 +673,16 @@ class VQTokenizerTrainerV3(Trainer):
         min_val_epoch = epoch
         logs = OrderedDict()
         while epoch < self.opt.max_epoch:
+            self.opt.start_use_gan = (epoch >= self.opt.start_dis_epoch)
             for i, batch_data in enumerate(train_dataloader):
                 self.vq_encoder.train()
                 self.quantizer.train()
                 self.vq_decoder.train()
                 # if self.opt.use_percep:
                 #     self.mov_encoder.train()
-                # if self.opt.start_use_gan:
+                if self.opt.start_use_gan:
                     # print('Introducing Adversarial Loss!~')
-                    # self.discriminator.train()
+                    self.discriminator.train()
                 d, cate = batch_data
                 self.forward(d)
 

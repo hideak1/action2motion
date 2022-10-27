@@ -54,6 +54,8 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--eval_every_e', type=int, default=3, help='Frequency of printing training progress')
 
         self.parser.add_argument('--tokenizer_name', type=str, default="motiontokens", help='Name of this trial')
+
+        self.parser.add_argument('--start_dis_epoch', type=float, default=10, help='Layers of GRU')
         self.is_train = True
 
 class Action2MotionOptions(TrainOptions):
