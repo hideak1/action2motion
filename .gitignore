@@ -2,3 +2,4 @@
 /dataset
 /eval_results
 /log
+*.pyc

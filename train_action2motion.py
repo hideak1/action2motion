@@ -85,7 +85,7 @@ if __name__ == '__main__':
     dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
     # if opt.t2m_v2:
-    t2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
+    a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
                                     d_trg_word_vec=12,
                                     d_model=12, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
@@ -101,14 +101,14 @@ if __name__ == '__main__':
 
 
     all_params = 0
-    pc_transformer = sum(param.numel() for param in t2m_transformer.parameters())
-    print(t2m_transformer)
+    pc_transformer = sum(param.numel() for param in a2m_transformer.parameters())
+    print(a2m_transformer)
     print("Total parameters of t2m_transformer net: {}".format(pc_transformer))
     all_params += pc_transformer
 
     print('Total parameters of all models: {}'.format(all_params))
 
-    trainer = TransformerA2MTrainer(opt, t2m_transformer)
+    trainer = TransformerA2MTrainer(opt, a2m_transformer)
 
     train_dataset = ActionTokenDataset(data, opt, w_vectorizer)
     val_dataset = ActionTokenDataset(data, opt, w_vectorizer)

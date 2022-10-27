@@ -438,6 +438,153 @@ class ActionTokenDataset(data.Dataset):
 
         return one_hot_motion, classes_to_generate
 
+class TestActionTokenDataset(data.Dataset):
+    def __init__(self, dataset, opt, w_vectorizer):
+        self.dataset = dataset
+        self.opt = opt
+        self.w_vectorizer = w_vectorizer
+        data_dict = {}
+        for i, data in enumerate(tqdm(dataset)):
+                motion, name = data
+                m_token_list = []
+                with cs.open(pjoin(opt.data_root, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
+                    for line in f.readlines():
+                        m_token_list.append(line.strip().split(' '))
+                    data_dict[name] = {}
+                    data_dict[name]['tokens'] = m_token_list
+                    data_dict[name]['motions'] = motion
+        # id_list = []
+        # with cs.open(split_file, 'r') as f:
+        #     for line in f.readlines():
+        #         id_list.append(line.strip())
+
+        # new_name_list = []
+        # data_dict = {}
+        # for name in tqdm(id_list):
+        #     try:
+        #         m_token_list = []
+        #         # Read tokens
+        #         with cs.open(pjoin(opt.data_root, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
+        #             for line in f.readlines():
+        #                 m_token_list.append(line.strip().split(' '))
+
+        #         # Read text
+        #         with cs.open(pjoin(opt.text_dir, name + '.txt')) as f:
+        #             text_data = []
+        #             flag = False
+        #             lines = f.readlines()
+        #             # if 'train' in split_file:
+        #             #     lines = lines
+
+        #             for line in lines:
+        #                 try:
+        #                     text_dict = {}
+        #                     line_split = line.strip().split('#')
+        #                     caption = line_split[0]
+        #                     t_tokens = line_split[1].split(' ')
+        #                     f_tag = float(line_split[2])
+        #                     to_tag = float(line_split[3])
+        #                     f_tag = 0.0 if np.isnan(f_tag) else f_tag
+        #                     to_tag = 0.0 if np.isnan(to_tag) else to_tag
+
+        #                     text_dict['caption'] = caption
+        #                     text_dict['tokens'] = t_tokens
+        #                     if f_tag == 0.0 and to_tag == 0.0:
+        #                         flag = True
+        #                         text_data.append(text_dict)
+        #                     else:
+        #                         m_token_list = [tokens[int(f_tag*5) : int(to_tag*5)] for tokens in m_token_list]
+        #                         #
+        #                         # if (len(n_motion)) < min_motion_len or (len(n_motion) >= 200):
+        #                         #     continue
+        #                         new_name = '%s_%f_%f'%(name, f_tag, to_tag)
+        #                         # new_name = random.choice('ABCDEFGHIJKLMNOPQRSTUVW') + '_' + name
+        #                         # while new_name in data_dict:
+        #                         #     new_name = random.choice('ABCDEFGHIJKLMNOPQRSTUVW') + '_' + name
+        #                         data_dict[new_name] = {'m_token_list': m_token_list,
+        #                                                'text':[text_dict]}
+        #                         new_name_list.append(new_name)
+        #                 except:
+        #                     # print(line_split)
+        #                     # print(line_split[2], line_split[3], f_tag, to_tag, name)
+        #                     pass
+
+        #         if flag:
+        #             data_dict[name] = {'m_token_list': m_token_list,
+        #                                'text':text_data}
+        #             new_name_list.append(name)
+        #     except:
+        #         pass
+        # self.data_dict = data_dict
+        # self.name_list = new_name_list
+        self.data_dict = data_dict
+
+    def __len__(self):
+        return len(self.data_dict)
+
+    def __getitem__(self, item):
+        motion, label = self.dataset[item]
+        cate_one_hot, classes_to_generate = self.get_cate_one_hot(label)
+        m_token_list = self.data_dict[label]['tokens']
+        m_tokens = random.choice(m_token_list)
+        m_tokens = [int(token) for token in m_tokens]
+        motions = self.data_dict[label]['motions']
+        # data = self.data_dict[self.name_list[item]]
+        # m_token_list, text_list = data['m_token_list'], data['text']
+        # m_tokens = random.choice(m_token_list)
+        # m_tokens = [int(token) for token in m_tokens]
+        # text_data = random.choice(text_list)
+        # caption, t_tokens = text_data['caption'], text_data['tokens']
+
+        # if len(t_tokens) < self.opt.max_text_len:
+        #     t_tokens = ['sos/OTHER'] + t_tokens + ['eos/OTHER']
+        #     sent_len = len(t_tokens)
+        #     t_tokens += ['unk/OTHER'] * (self.opt.max_text_len + 2 - sent_len)
+        # else:
+        #     t_tokens = t_tokens[:self.opt.max_text_len]
+        #     t_tokens = ['sos/OTHER'] + t_tokens + ['eos/OTHER']
+        #     sent_len = len(t_tokens)
+        # word_embeddings = []
+        # word_ids = []
+        # for i, t_token in enumerate(t_tokens):
+        #     word_emb, _, word_id = self.w_vectorizer[t_token]
+        #     word_embeddings.append(word_emb[None, :])
+        #     if i >= sent_len:
+        #         word_ids.append(self.opt.txt_pad_idx)
+        #     else:
+        #         word_ids.append(word_id)
+        # word_embeddings = np.concatenate(word_embeddings, axis=0)
+        # word_ids = np.array(word_ids, dtype=int)
+        coin = np.random.choice([False, False, True])
+        # print(len(m_tokens))
+        if coin:
+            # drop one token at the head or tail
+            coin2 = np.random.choice([True, False])
+            if coin2:
+                m_tokens = m_tokens[:-1]
+            else:
+                m_tokens = m_tokens[1:]
+        m_tokens_len = len(m_tokens)
+
+        m_tokens = [self.opt.mot_start_idx] + \
+                   m_tokens + \
+                   [self.opt.mot_end_idx] + \
+                   [self.opt.mot_pad_idx] * (self.opt.motion_length - len(m_tokens) - 2)
+        # print(len(word_embeddings), sent_len, len(m_tokens))
+        m_tokens = np.array(m_tokens, dtype=int)
+        return motions, cate_one_hot, label, 0, m_tokens, m_tokens_len
+
+    def get_cate_one_hot(self, categorie):
+        classes_to_generate = np.array(categorie).reshape((-1,))
+        # dim (num_samples, dim_category)
+        one_hot = np.zeros((1, self.opt.dim_category), dtype=np.float32)
+        one_hot[np.arange(1), classes_to_generate] = 1
+
+        # dim (num_samples, dim_category)
+        one_hot_motion = torch.from_numpy(one_hot).to(self.opt.device).requires_grad_(False)
+
+        return one_hot_motion, classes_to_generate
+
 class TextMotionTokenDataset(data.Dataset):
     def __init__(self, dataset, opt, split_file, w_vectorizer):
         self.dataset = dataset

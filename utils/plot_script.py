@@ -114,7 +114,7 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
 
     fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
-    ax = p3.Axes3D(fig)
+    ax = plt.axes(projection = '3d')
     init()
 
     data = np.array(motion, dtype=float)
@@ -122,20 +122,20 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
     frame_number = data.shape[0]
     # dim (frame, joints, xyz)
     print(data.shape)
-
+    if dataset == "mocap":
+        ax.view_init(elev=110, azim=-90)
+    else:
+        ax.view_init(elev=110, azim=90)
     def update(index):
-        ax.lines = []
-        ax.collections = []
-        if dataset == "mocap":
-            ax.view_init(elev=110, azim=-90)
-        else:
-            ax.view_init(elev=110, azim=90)
+        # ax.lines = []
+        # ax.collections = []
+    
         for chain, color in zip(kinematic_tree, colors):
             ax.plot3D(motion[index, chain, 0], motion[index, chain, 1], motion[index, chain, 2], linewidth=4.0, color=color)
-        # plt.axis('off')
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.set_zticklabels([])
+        # plt.axis()
+        # ax.set_xticklabels([])
+        # ax.set_yticklabels([])
+        # ax.set_zticklabels([])
 
     ani = FuncAnimation(fig, update, frames=frame_number, interval=interval, repeat=False, repeat_delay=200)
     # update(1)
@@ -143,7 +143,8 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
     # Writer = writers['ffmpeg']
     # writer = Writer(fps=15, metadata={})
     ani.save(save_path, writer='pillow')
-    plt.close()
+    # plt.close()
+    # print('aaa')
 
 
 def plot_3d_motion_with_trajec(motion, kinematic_tree, save_path, interval=50, trajec1=None, trajec2=None, dataset=None):

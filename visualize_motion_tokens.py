@@ -37,13 +37,20 @@ def plot(data, label):
 
         if opt.dataset_type == "humanact12":
             plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
-
         elif opt.dataset_type == "ntu_rgbd_vibe":
             plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
-
         elif opt.dataset_type == "mocap":
             plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80, dataset="mocap")
 
+# def plot_2(data, count):
+#     for i in range(len(data)):
+#         joint_data = data[i]
+#         joint = recover_from_ric(torch.from_numpy(joint_data).float(), opt.joints_num).numpy()
+#         # joint = motion_temporal_filter(joint)
+#         # save_path = '%s_%02d.mp4' % (save_dir, i)
+#         np.save(pjoin(opt.joint_dir, "%d.npy"%count), joint)
+#         plot_3d_motion(pjoin(opt.animation_dir, "%d.mp4"%count),
+#                        kinematic_chain, joint, title="None", fps=fps, radius=radius)
 
 def build_models(opt):
     vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)

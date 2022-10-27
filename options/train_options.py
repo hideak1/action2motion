@@ -75,6 +75,25 @@ class Action2MotionOptions(TrainOptions):
         self.parser.add_argument('--label_smoothing', action='store_true')
         self.is_train = True
 
+class Action2MotionTestOptions(TrainOptions):
+    def initialize(self):
+        TrainOptions.initialize(self)
+        self.parser.add_argument('--d_model', type=int, default=512, help='Dimension of hidden unit in GRU')
+        self.parser.add_argument('--d_inner_hid', type=int, default=2048, help='Dimension of hidden unit in GRU')
+        self.parser.add_argument('--d_k', type=int, default=64, help='Dimension of hidden unit in GRU')
+        self.parser.add_argument('--d_v', type=int, default=64, help='Dimension of hidden unit in GRU')
+
+        self.parser.add_argument('--n_head', type=int, default=8, help='Dimension of hidden unit in GRU')
+        self.parser.add_argument('--n_enc_layers', type=int, default=6, help='Dimension of hidden unit in GRU')
+        self.parser.add_argument('--n_dec_layers', type=int, default=6, help='Dimension of hidden unit in GRU')
+
+        self.parser.add_argument('--dropout', type=float, default=0.1, help='Dimension of hidden unit in GRU')
+
+        self.parser.add_argument('--proj_share_weight', action="store_true", help='Training iterations')
+
+        self.parser.add_argument('--label_smoothing', action='store_true')
+        self.is_train = True
+
 class TrainVQTokenizerOptions():
     def __init__(self):
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
