@@ -651,12 +651,12 @@ class VQTokenizerTrainerV3(Trainer):
         self.vq_encoder.to(self.device)
         self.quantizer.to(self.device)
         self.vq_decoder.to(self.device)
-        # self.discriminator.to(self.device)
+        self.discriminator.to(self.device)
 
         self.opt_vq_encoder = optim.Adam(self.vq_encoder.parameters(), lr=self.opt.lr)
         self.opt_quantizer = optim.Adam(self.quantizer.parameters(), lr=self.opt.lr)
         self.opt_vq_decoder = optim.Adam(self.vq_decoder.parameters(), lr=self.opt.lr)
-        # self.opt_discriminator = optim.Adam(self.discriminator.parameters(), lr=self.opt.lr)
+        self.opt_discriminator = optim.Adam(self.discriminator.parameters(), lr=self.opt.lr)
 
         epoch = 0
         it = 0
