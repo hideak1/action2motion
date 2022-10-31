@@ -6,6 +6,7 @@ conda activate a2m
 ```
 or install by pip
 ```
+conda install pytorch torchvision torchaudio cpuonly -c pytorch
 pip install 
 scipy
 numpy
