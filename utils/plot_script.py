@@ -143,7 +143,7 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
     # Writer = writers['ffmpeg']
     # writer = Writer(fps=15, metadata={})
     ani.save(save_path, writer='pillow')
-    # plt.close()
+    plt.close()
     # print('aaa')
 
 
