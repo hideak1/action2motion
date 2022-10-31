@@ -67,7 +67,7 @@ class VQTokenizerTrainer(Trainer):
         self.device = args.device
 
         if args.is_train:
-            self.logger = Logger(args.log_dir)
+            self.logger = Logger(args.log_path)
             self.l1_criterion = torch.nn.L1Loss()
             self.gan_criterion = torch.nn.BCEWithLogitsLoss()
 
@@ -192,7 +192,7 @@ class VQTokenizerTrainer(Trainer):
             self.opt_discriminator.load_state_dict(checkpoint['opt_discriminator'])
         return checkpoint['ep'], checkpoint['total_it']
 
-    def train(self, train_dataloader, val_dataloader, plot_eval):
+    def train(self, train_dataloader, val_dataloader, plot_eval = None):
         self.vq_encoder.to(self.device)
         self.quantizer.to(self.device)
         self.vq_decoder.to(self.device)
@@ -226,8 +226,9 @@ class VQTokenizerTrainer(Trainer):
 
                 if self.opt.use_gan:
                     self.discriminator.train()
-
-                self.forward(batch_data)
+                
+                d, l = batch_data
+                self.forward(d)
 
                 log_dict = self.update()
                 # time3 = time.time()
@@ -265,7 +266,8 @@ class VQTokenizerTrainer(Trainer):
             val_loss_emb = 0
             with torch.no_grad():
                 for i, batch_data in enumerate(val_dataloader):
-                    self.forward(batch_data)
+                    d, l = batch_data
+                    self.forward(d)
                     val_loss_rec += self.l1_criterion(self.recon_motions, self.motions).item()
                     # val_loss_emb += self.embedding_loss.item()
 
@@ -286,7 +288,7 @@ class VQTokenizerTrainer(Trainer):
                 data = torch.cat([self.recon_motions[:4], self.motions[:4]], dim=0).detach().cpu().numpy()
                 save_dir = pjoin(self.opt.eval_dir, 'E%04d' % (epoch))
                 os.makedirs(save_dir, exist_ok=True)
-                plot_eval(data, save_dir)
+                #plot_eval(data, save_dir)
 
             if epoch - min_val_epoch >= 5:
                 print('Early Stopping!~')

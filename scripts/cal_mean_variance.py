@@ -16,6 +16,9 @@ def mean_variance(data_dir, save_dir, joints_num):
     data_list = []
 
     for file in file_list:
+        if file[-4:] not in ['.npy']:
+            print(f'skip file {file}')
+            continue
         data = np.load(pjoin(data_dir, file))
         if np.isnan(data).any():
             print(file)
@@ -43,8 +46,8 @@ def mean_variance(data_dir, save_dir, joints_num):
 
 
 if __name__ == '__main__':
-    data_dir = '../dataset/kit_mocap_dataset/new_joint_vecs/'
-    save_dir = '../dataset/kit_mocap_dataset/'
-    mean, Std = mean_variance(data_dir, save_dir, 21)
+    data_dir = '../dataset/humanact12/'
+    save_dir = '../dataset/humanact12/zscore'
+    mean, Std = mean_variance(data_dir, save_dir, 24)
     print(mean)
     print(Std)

@@ -8,7 +8,7 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self):
-        self.parser.add_argument('--name', type=str, default="test", help='Name of experiment(For creating save root)')
+        self.parser.add_argument('--name', type=str, default="test333", help='Name of experiment(For creating save root)')
         self.parser.add_argument("--gpu_id", type=str, default='-1',
                                  help='Specify id of gpu for using')
 

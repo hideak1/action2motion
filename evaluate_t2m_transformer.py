@@ -14,7 +14,7 @@ from data import dataset
 from torch.utils.data import DataLoader
 from utils.word_vectorizer import WordVectorizerV2
 from data.dataset import TestActionTokenDataset, TextMotionTokenDataset
-
+from tqdm import tqdm
 
 def plot(data, label, result_path):
     for i in range(data.shape[0]):
@@ -46,7 +46,7 @@ def build_models(opt):
     vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)
     quantizer = Quantizer(opt.codebook_size, opt.dim_vq_latent, opt.lambda_beta)
 
-    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.tokenizer_name, 'model', 'finest.tar'),
+    checkpoint = torch.load(pjoin(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.tokenizer_name, 'model', 'finest.tar'),
                             map_location=opt.device)
     vq_decoder.load_state_dict(checkpoint['vq_decoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
@@ -60,7 +60,7 @@ def build_models(opt):
                                     trg_emb_prj_weight_sharing=opt.proj_share_weight)
 
 
-    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.name, 'model', '%s.tar'%(opt.which_epoch)),
+    checkpoint = torch.load(pjoin(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, 'model', '%s.tar'%(opt.which_epoch)),
                             map_location=opt.device)
     a2m_transformer.load_state_dict(checkpoint['transformer'])
     print('Loading t2m_transformer model: Epoch %03d Total_Iter %03d' % (checkpoint['ep'], checkpoint['total_it']))
@@ -70,6 +70,8 @@ def build_models(opt):
 
 
 if __name__ == '__main__':
+    # torch.multiprocessing.set_start_method('spawn')
+    # torch.multiprocessing.set_sharing_strategy('file_system')
     parser = TestOptions()
     opt = parser.parse()
 
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     if opt.gpu_id != -1:
         torch.cuda.set_device(opt.gpu_id)
 
-    opt.save_root = os.path.join(opt.checkpoints_dir, opt.dataset_type, opt.tokenizer_name)
+    opt.save_root = os.path.join(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.tokenizer_name)
     opt.result_dir = pjoin(opt.result_path, opt.dataset_type, opt.name, opt.ext)
     opt.joint_dir = pjoin(opt.result_dir, 'joints')
     opt.animation_dir = pjoin(opt.result_dir, 'animations')
@@ -143,7 +145,7 @@ if __name__ == '__main__':
     vq_decoder, quantizer, a2m_transformer = build_models(opt)
 
     dataset = TestActionTokenDataset(data, opt, w_vectorizer)
-    data_loader = DataLoader(dataset, batch_size=opt.batch_size,num_workers=1, shuffle=True, pin_memory=True)
+    data_loader = DataLoader(dataset, batch_size=opt.batch_size,num_workers=0, shuffle=True, pin_memory=False)
 
     vq_decoder.to(opt.device)
     quantizer.to(opt.device)
@@ -159,7 +161,7 @@ if __name__ == '__main__':
     print('Generating Results')
     result_dict = {}
     with torch.no_grad():
-        for i, batch_data in enumerate(data_loader):
+        for i, batch_data in enumerate(tqdm(data_loader)):
             print('%02d_%03d'%(i, opt.num_results))
             motions, word_emb, label, cap_lens, m_tokens, m_tokens_len = batch_data
 

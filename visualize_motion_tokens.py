@@ -56,10 +56,10 @@ def build_models(opt):
     vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)
     quantizer = Quantizer(opt.codebook_size, opt.dim_vq_latent, opt.lambda_beta)
 
-    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.tokenizer_name, 'model', 'finest.tar'),
+    checkpoint = torch.load(pjoin(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, opt.tokenizer_name, 'model', 'finest.tar'),
                             map_location=opt.device)
-    for k, v in checkpoint.items():
-        print(k)
+    
+    
     vq_decoder.load_state_dict(checkpoint['vq_decoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
     return vq_decoder, quantizer
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     if opt.gpu_id != -1:
         torch.cuda.set_device(opt.gpu_id)
 
-    opt.save_root = os.path.join(opt.checkpoints_dir, opt.dataset_type, opt.name)
+    opt.save_root = os.path.join(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name)
     result_path = os.path.join(opt.result_path, opt.dataset_type, opt.name + opt.name_ext)
     opt.result_dir = pjoin(opt.result_path, opt.dataset_type, opt.name + opt.name_ext)
     opt.joint_dir = pjoin(opt.result_dir, 'joints')

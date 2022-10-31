@@ -294,6 +294,64 @@ class MotionDataset(data.Dataset):
     def __len__(self):
         return len(self.dataset)
 
+
+class MotionTokenizeDataset(data.Dataset):
+    def __init__(self, dataset, opt):
+        self.dataset = dataset
+        self.motion_length = opt.motion_length
+        self.opt = opt
+        # self.data = []
+        # self.lengths = []
+        # self.labels = []
+        # for i, data in enumerate(tqdm(dataset)):
+        #     motion, name = data
+        #     try:
+        #         if motion.shape[0] < self.motion_length:
+        #             continue
+        #         self.lengths.append(motion.shape[0] - opt.window_size)
+        #         self.data.append(motion)
+        #         self.labels.append(name)
+        #     except:
+        #         # Some motion may not exist in KIT dataset
+        #         pass
+        # self.cumsum = np.cumsum([0] + self.lengths)
+
+    def __getitem__(self, item):
+        # if item != 0:
+        #     motion_id = np.searchsorted(self.cumsum, item) - 1
+        #     idx = item - self.cumsum[motion_id] - 1
+        # else:
+        #     motion_id = 0
+        #     idx = 0
+        # motion = self.data[motion_id]
+        # label = self.labels[motion_id]
+
+        motion, label = self.dataset[item]
+        motion = np.array(motion)
+        motion_len = motion.shape[0]
+        # Motion can be of various length, we randomly sample sub-sequence
+        # or repeat the last pose for padding
+
+        # random sample
+        if motion_len >= self.motion_length:
+            gap = motion_len - self.motion_length
+            start = 0 if gap == 0 else np.random.randint(0, gap, 1)[0]
+            end = start + self.motion_length
+            r_motion = motion[start:end]
+            # offset deduction
+            r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
+        # padding
+        else:
+            gap = self.motion_length - motion_len
+            last_pose = np.expand_dims(motion[-1], axis=0)
+            pad_poses = np.repeat(last_pose, gap, axis=0)
+            r_motion = np.concatenate([motion, pad_poses], axis=0)
+        # r_motion = torch.tensor(r_motion)
+        return r_motion, label
+
+    def __len__(self):
+        return len(self.dataset)
+
 class ActionTokenDataset(data.Dataset):
     def __init__(self, dataset, opt, w_vectorizer):
         self.dataset = dataset

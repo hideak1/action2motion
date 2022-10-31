@@ -8,7 +8,7 @@ from utils.plot_script import *
 
 from networks.modules import *
 from networks.quantizer import *
-from networks.trainers import VQTokenizerTrainerV3
+from networks.trainers import VQTokenizerTrainerV3, VQTokenizerTrainer
 from data import dataset
 from torch.utils.data import DataLoader
 from utils.plot_script import plot_loss
@@ -29,8 +29,8 @@ def load_models(opt):
     quantizer = Quantizer(opt.codebook_size, opt.dim_vq_latent, opt.lambda_beta)
 
     if opt.is_continue:
-        checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type,
-                                      'VQVAEV3_CB1024_CMT_H1024_NRES3', 'model', 'finest.tar'),
+        checkpoint = torch.load(pjoin(opt.checkpoints_dir, 'a2m', opt.dataset_type,
+                                      opt.name, opt.tokenizer_name, 'model', 'finest.tar'),
                                 map_location=opt.device)
         vq_encoder.load_state_dict(checkpoint['vq_encoder'])
         vq_decoder.load_state_dict(checkpoint['vq_decoder'])
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     opt.device = torch.device("cuda:" + str(opt.gpu_id) if torch.cuda.is_available() else "cpu")
 
-    opt.save_root = os.path.join(opt.checkpoints_dir, opt.dataset_type, opt.tokenizer_name)
+    opt.save_root = os.path.join(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, opt.tokenizer_name)
     opt.model_dir = pjoin(opt.save_root, 'model')
     opt.joints_path = os.path.join(opt.save_root, 'joints')
     opt.log_path = os.path.join(opt.save_root, "log.txt")

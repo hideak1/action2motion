@@ -129,7 +129,7 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
     def update(index):
         # ax.lines = []
         # ax.collections = []
-    
+        ax.clear()
         for chain, color in zip(kinematic_tree, colors):
             ax.plot3D(motion[index, chain, 0], motion[index, chain, 1], motion[index, chain, 2], linewidth=4.0, color=color)
         # plt.axis()

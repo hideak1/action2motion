@@ -25,9 +25,9 @@ import codecs as cs
 
 def loadVQModel(opt):
     vq_encoder = VQEncoderV3(input_size - 4, enc_channels, opt.n_down)
-    # vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)
+    vq_decoder = VQDecoderV3(opt.dim_vq_latent, dec_channels, opt.n_resblk, opt.n_down)
     quantizer = Quantizer(opt.codebook_size, opt.dim_vq_latent, opt.lambda_beta)
-    checkpoint = torch.load(pjoin(opt.checkpoints_dir, opt.dataset_type, opt.tokenizer_name, 'model', 'finest.tar'),
+    checkpoint = torch.load(pjoin(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, opt.tokenizer_name, 'model', 'finest.tar'),
                             map_location=opt.device)
     vq_encoder.load_state_dict(checkpoint['vq_encoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
