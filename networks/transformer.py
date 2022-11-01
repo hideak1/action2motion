@@ -125,13 +125,14 @@ class EncoderV2(nn.Module):
         else:
             # print(src_seq)
             src_seq = self.src_word_emb(src_seq)
+        # print(f'step1: {src_seq}')
         src_seq *= self.d_model ** 0.5
         enc_output = self.position_enc(src_seq)
-
+        # print(f'step2: {enc_output}')
         for enc_layer in self.layer_stack:
             enc_output, enc_slf_attn = enc_layer(enc_output, slf_attn_mask=src_mask)
             enc_slf_attn_list += [enc_slf_attn] if return_attns else []
-
+        # print(f'step3: {enc_output}')
         if return_attns:
             return enc_output, enc_slf_attn_list
         return enc_output,

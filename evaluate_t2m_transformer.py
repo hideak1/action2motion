@@ -13,7 +13,7 @@ from networks.trainers import TransformerA2MTrainer
 from data import dataset
 from torch.utils.data import DataLoader
 from utils.word_vectorizer import WordVectorizerV2
-from data.dataset import TestActionTokenDataset, TextMotionTokenDataset
+from data.dataset import TestActionTokenDataset
 from tqdm import tqdm
 
 def plot(data, label, result_path):
