@@ -13,7 +13,7 @@ from networks.trainers import TransformerA2MTrainer
 from data import dataset
 from torch.utils.data import DataLoader
 from utils.word_vectorizer import WordVectorizerV2
-from data.dataset import ActionTokenDataset, TextMotionTokenDataset
+from data.dataset import ActionTokenDataset
 
 if __name__ == '__main__':
     parser = Action2MotionOptions()
