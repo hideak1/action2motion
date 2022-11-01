@@ -6,7 +6,7 @@ import utils.paramUtil as paramUtil
 from options.train_options import Action2MotionOptions
 from utils.plot_script import *
 
-from networks.transformer import TransformerV5
+from networks.transformer import TransformerV5, TransformerV6
 from networks.quantizer import *
 from networks.modules import *
 from networks.trainers import TransformerA2MTrainer
@@ -85,7 +85,17 @@ if __name__ == '__main__':
     dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
     # if opt.t2m_v2:
-    a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
+    # a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
+    #                                 d_trg_word_vec=12,
+    #                                 d_model=12, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
+    #                                 n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
+    #                                 dropout=0.1,
+    #                                 n_src_position=50, n_trg_position=100,
+    #                                 trg_emb_prj_weight_sharing=opt.proj_share_weight
+    #                                     )
+
+
+    a2m_transformer = TransformerV6(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
                                     d_trg_word_vec=12,
                                     d_model=12, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
@@ -93,6 +103,7 @@ if __name__ == '__main__':
                                     n_src_position=50, n_trg_position=100,
                                     trg_emb_prj_weight_sharing=opt.proj_share_weight
                                         )
+
     # else:
     #     t2m_transformer = TransformerV1(n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=300, d_trg_word_vec=512,
     #                                     d_model=opt.d_model, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,

@@ -136,6 +136,19 @@ class EncoderV2(nn.Module):
             return enc_output, enc_slf_attn_list
         return enc_output,
 
+class EncoderDoNothing(nn.Module):
+    def __init__(self, n_src_vocab, d_word_vec, n_layers, n_head, d_k, d_v, d_model, d_inner,
+                 pad_idx, dropout=0.1, n_position=40):
+        super(EncoderDoNothing, self).__init__()
+
+    def forward(self, src_seq, src_mask, return_attns=False, input_onehot=False):
+        enc_slf_attn_list = []
+        
+        enc_output = src_seq.reshape(1, 1, 12)
+
+        if return_attns:
+            return enc_output, enc_slf_attn_list
+        return enc_output,
 
 """Of which the inputs are tokens, outputs are discrete probablities"""
 class Decoder(nn.Module):
@@ -591,6 +604,125 @@ class TransformerV5(nn.Module):
             if sample:
                 ix = torch.multinomial(probs, num_samples=1)
                 while (ix[0] in [trg_sos, trg_eos, self.trg_pad_idx]):
+                    ix = torch.multinomial(probs, num_samples=1)
+            trg_seq = torch.cat((trg_seq, ix), dim=1)
+        return trg_seq
+
+
+    def sample_batch(self, src_seq, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None):
+        trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
+
+        batch_size, src_seq_len = src_seq.shape[0], src_seq.shape[1]
+        src_mask = get_pad_mask_idx(src_seq, self.src_pad_idx)
+        enc_output, *_ = self.encoder(src_seq, src_mask)
+
+        len_map = torch.ones((batch_size, 1), dtype=torch.long).to(src_seq.device) * max_steps
+
+        for i in range(max_steps):
+            # print(trg_seq)
+            trg_mask = get_subsequent_mask(trg_seq)
+            dec_output, *_ = self.decoder(trg_seq, trg_mask, enc_output, src_mask)
+            seq_logit = self.trg_word_prj(dec_output)
+            logits = seq_logit[:, -1, :]
+
+            if top_k is not None:
+                logits = top_k_logits(logits, top_k)
+            probs = F.softmax(logits, dim=-1)
+            # print(probs.sort(dim=1)[:top_k])
+            # print(torch.topk(probs, k=10, dim=-1))
+            _, ix = torch.topk(probs, k=1, dim=-1)
+
+            eos_locs = (ix == trg_eos)
+            non_eos_map = (len_map == max_steps)
+            len_map = len_map.masked_fill(eos_locs & non_eos_map, i)
+
+            if (len_map.ne(max_steps)).sum() == batch_size:
+                break
+
+            if sample:
+                probs[:, [trg_eos, trg_sos, self.trg_pad_idx]] = 0
+
+                ix = torch.multinomial(probs, num_samples=1)
+            ix.masked_fill_(eos_locs, trg_eos)
+            trg_seq = torch.cat((trg_seq, ix), dim=1)
+
+        return trg_seq, len_map
+
+
+class TransformerV6(nn.Module):
+    def __init__(self, n_src_vocab, src_pad_idx, n_trg_vocab, trg_pad_idx, d_src_word_vec=512, d_trg_word_vec=512,
+                 d_model=512, d_inner=2048, n_enc_layers=6, n_dec_layers=6, n_head=8, d_k=64, d_v=64,
+                 dropout=0.1, n_src_position=40, n_trg_position=200, trg_emb_prj_weight_sharing=True):
+        super(TransformerV6, self).__init__()
+
+        self.trg_pad_idx = trg_pad_idx
+        self.src_pad_idx = src_pad_idx
+
+        self.d_model = d_model
+
+        self.encoder = EncoderDoNothing(
+            n_src_vocab=n_src_vocab, n_position=n_src_position, d_word_vec=d_src_word_vec,
+            d_model=d_model, d_inner=d_inner, n_layers=n_enc_layers, n_head=n_head, d_k=d_k,
+            d_v=d_v,  pad_idx=src_pad_idx, dropout=dropout
+        )
+
+        self.decoder = Decoder(
+            n_trg_vocab=n_trg_vocab, n_position=n_trg_position, d_word_vec=d_trg_word_vec,
+            d_model=d_model, d_inner=d_inner, n_layers=n_dec_layers, n_head=n_head, d_k=d_k,
+            d_v=d_v, pad_idx=trg_pad_idx, dropout=dropout
+        )
+        self.trg_word_prj = nn.Linear(d_model, n_trg_vocab, bias=False)
+        for p in self.parameters():
+            if p.dim()>1:
+                nn.init.xavier_uniform_(p)
+
+        if trg_emb_prj_weight_sharing:
+            self.trg_word_prj.weight = self.decoder.trg_word_emb.weight
+
+    def forward(self, src_seq, trg_seq, input_onehot=False, src_mask=None, src_non_pad_lens=None):
+        batch_size, src_seq_len = src_seq.shape[0], src_seq.shape[1]
+        # src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
+        if not input_onehot:
+            src_mask = get_pad_mask_idx(src_seq, self.src_pad_idx)
+        elif src_mask is None:
+            src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
+        trg_mask = get_pad_mask_idx(trg_seq, self.trg_pad_idx) & get_subsequent_mask(trg_seq)
+
+        # print(src_mask)
+        # print(trg_mask)
+
+        enc_output, *_ = self.encoder(src_seq, src_mask, input_onehot, input_onehot=input_onehot)
+        dec_output, *_ = self.decoder(trg_seq, trg_mask, enc_output, src_mask)
+        seq_logit = self.trg_word_prj(dec_output)
+        return seq_logit
+
+    def sample(self, src_seq, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None):
+        trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
+
+        # batch_size, src_seq_len = src_seq.shape[0], src_seq.shape[1]
+        # src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
+        src_mask = get_pad_mask_idx(src_seq, self.src_pad_idx)
+        enc_output, *_ = self.encoder(src_seq, src_mask)
+
+        for _ in range(max_steps):
+            # print(trg_seq)
+            trg_mask = get_subsequent_mask(trg_seq)
+            dec_output, *_ = self.decoder(trg_seq, trg_mask, enc_output, src_mask)
+            seq_logit = self.trg_word_prj(dec_output)
+            logits = seq_logit[:, -1, :]
+
+            if top_k is not None:
+                logits = top_k_logits(logits, top_k)
+            probs = F.softmax(logits, dim=-1)
+            # print(probs.sort(dim=1)[:top_k])
+            # print(torch.topk(probs, k=10, dim=-1))
+            _, ix = torch.topk(probs, k=1, dim=-1)
+            if ix[0] == trg_eos:
+                break
+
+            if sample:
+                ix = torch.multinomial(probs, num_samples=1)
+                while (ix[0] in [trg_sos, trg_eos]):
                     ix = torch.multinomial(probs, num_samples=1)
             trg_seq = torch.cat((trg_seq, ix), dim=1)
         return trg_seq
