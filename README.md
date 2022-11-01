@@ -15,5 +15,9 @@ spacy
 tqdm
 ffmpeg
 matplotlib
+numpy
+opencv-python
+pandas
+joblib
 ```
 
