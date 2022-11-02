@@ -141,11 +141,28 @@ class EncoderDoNothing(nn.Module):
     def __init__(self, n_src_vocab, d_word_vec, n_layers, n_head, d_k, d_v, d_model, d_inner,
                  pad_idx, dropout=0.1, n_position=40):
         super(EncoderDoNothing, self).__init__()
+        self.position_enc = PositionalEncoding(d_model, max_len=n_position)
+        self.src_word_emb = nn.Embedding(n_src_vocab, d_word_vec, padding_idx=pad_idx)
+        self.layer_stack = nn.ModuleList([
+            EncoderLayer(d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
+            for _ in range(n_layers)])
+        # self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        # self.scale_emb = scale_emb
+        self.d_model = d_model
 
     def forward(self, src_seq, src_mask, return_attns=False, input_onehot=False):
         enc_slf_attn_list = []
         
-        enc_output = src_seq.reshape(1, 1, 12)
+        if input_onehot:
+            src_seq = torch.matmul(src_seq, self.src_word_emb.weight)
+            # print(src_seq.shape, src_mask.shape)
+            src_seq = src_seq * src_mask.transpose(1, 2)
+        else:
+            # print(src_seq)
+            src_seq = self.src_word_emb(src_seq)
+        # print(f'step1: {src_seq}')
+        src_seq *= self.d_model ** 0.5
+        enc_output = src_seq
 
         if return_attns:
             return enc_output, enc_slf_attn_list
