@@ -175,4 +175,4 @@ if __name__ == '__main__':
                 _, vq_latents, _, _ = quantizer(pre_latents)
                 # print(self.vq_latents.shape)
                 recon_motions = vq_decoder(vq_latents)
-                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))
+                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))

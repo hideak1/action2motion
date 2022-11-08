@@ -55,6 +55,24 @@
             //     "--time_counter",
             //     "--iters", "50000"
             ]
+        },
+        {
+            "name": "Python: tokenize",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tokenize_script.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [ 
+                "--name", "test_24_1",
+                "--dataset_type", "humanact12",
+                "--batch_size", "1",
+                "--motion_length", "24",
+                "--n_resblk", "3",
+                "--gpu_id", "0",
+                "--coarse_grained",
+                "--n_down", "1"
+            ]
         }
     ]
 }
