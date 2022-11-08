@@ -27,10 +27,13 @@ def plot(data, label):
         if not os.path.exists(keypoint_path):
             os.makedirs(keypoint_path)
         file_name = os.path.join(result_path, class_type + str(i) + ".gif")
-        offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
-                                        motion_orig.shape[0], joints_num)
 
-        motion_mat = motion_orig - offset
+        motion_mat = motion_orig
+        for j in range(1, motion_orig.shape[0], 1):
+            offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+                                        1, joints_num)
+
+            motion_mat[j] = motion_orig[j] + offset
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)

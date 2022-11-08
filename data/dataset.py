@@ -166,6 +166,92 @@ class MotionFolderDatasetHumanAct12(data.Dataset):
         return pose_mat, label
 
 
+class MotionFolderDatasetHumanAct12V2(data.Dataset):
+    def __init__(self, datapath, opt, lie_enforce, do_offset=True, raw_offsets=None, kinematic_chain=None):
+        self.datapath = datapath
+        self.do_offset = do_offset
+        self.lengths = []
+        self.data = []
+        self.labels = []
+        self.opt = opt
+        data_list = os.listdir(datapath)
+        data_list.sort()
+
+        if lie_enforce:
+            raw_offsets = torch.from_numpy(raw_offsets)
+            self.lie_skeleton = LieSkeleton(raw_offsets, kinematic_chain, torch.DoubleTensor)
+
+        for file_name in data_list:
+            if file_name.startswith("."):
+                continue
+            
+            full_path = os.path.join(self.datapath, file_name)
+            if os.path.isdir(full_path):
+                continue
+            pose_raw = np.load(full_path)
+
+            # Locate the root joint of initial pose at origin
+            if do_offset:
+                pose_mat = pose_raw
+                # get the offset and return the final pose
+                for i in range(pose_raw.shape[0] - 1, 0, -1):
+                    offset_mat = np.tile(pose_raw[i - 1, 0], (pose_raw.shape[1], 1))
+                    pose_mat[i] = pose_raw[i] - offset_mat
+            else:
+                pose_mat = pose_raw
+
+            # dataLoader will return Lie parameters
+            if lie_enforce and opt.isTrain:
+                # the first column of lie_params is zeros
+                # dim (motion_len, joints_num, 3)
+                pose_mat = torch.from_numpy(pose_mat)
+                lie_params = self.lie_skeleton.inverse_kinemetics(pose_mat).numpy()
+                # use the first column to store root translation information
+                pose_mat = np.concatenate((np.expand_dims(pose_mat[:, 0, :], axis=1)
+                                           , lie_params[:, 1:, :])
+                                           , axis=1)
+
+            pose_mat = pose_mat.reshape((-1, 24 * 3))
+
+            # not used any more
+            if self.opt.no_trajectory:
+                # for lie params, just exclude the root translation part
+                if self.opt.lie_enforce:
+                    pose_mat = pose_mat[:, 3:]
+                else:
+                    offset = np.tile(pose_mat[..., :3], (1, int(pose_mat.shape[1] / 3)))
+                    pose_mat = pose_mat - offset
+
+            label = file_name[file_name.find('A') + 1: file_name.find('.')]
+            # print(file_name)
+            if opt.coarse_grained:
+                label = label[:2]
+            if label not in self.labels:
+                self.labels.append(label)
+
+            pose_mat = torch.tensor(pose_mat)
+            self.data.append((pose_mat, label))
+            self.lengths.append(pose_mat.shape[0])
+        self.labels.sort()
+        self.cumsum = np.cumsum([0] + self.lengths)
+        print("Total number of frames {}, videos {}, action types {}".format(self.cumsum[-1], len(data_list), len(self.labels)))
+        self.label_enc = dict(zip(self.labels, np.arange(len(self.labels))))
+        self.label_enc_rev = dict(zip(np.arange(len(self.labels)), self.labels))
+        with codecs.open(os.path.join(opt.save_root, "label_enc_rev_humanact13.txt"), 'w', 'utf-8') as f:
+            for item in self.label_enc_rev.items():
+                f.write(str(item) + "\n")
+
+    def __len__(self):
+        return len(self.data)
+
+    def get_label_reverse(self, enc_label):
+        return self.label_enc_rev.get(enc_label)
+
+    def __getitem__(self, index):
+        pose_mat, label = self.data[index]
+        label = self.label_enc[label]
+        return pose_mat, label
+
 class MotionFolderDatasetNtuVIBE(data.Dataset):
     def __init__(self, file_prefix, candi_list_desc, labels, opt, joints_num=18, do_offset=True, extract_joints=None):
         self.data = []
@@ -308,13 +394,23 @@ class VQVaeMotionDataset(data.Dataset):
         # or repeat the last pose for padding
 
        
-        gap = motion_len - self.motion_length
-        start = 0 if gap == 0 else np.random.randint(0, gap, 1)[0]
-        end = start + self.motion_length
-        r_motion = motion[start:end]
-        # offset deduction
-        r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
+        # random sample
+        if motion_len >= self.motion_length:
+            gap = motion_len - self.motion_length
+            start = 0 if gap == 0 else np.random.randint(0, gap, 1)[0]
+            end = start + self.motion_length
+            r_motion = motion[start:end]
+            # offset deduction
+            r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
+        # padding
+        else:
+            gap = self.motion_length - motion_len
+            last_pose = np.expand_dims(motion[-1], axis=0)
+            pad_poses = np.repeat(last_pose, gap, axis=0)
+            r_motion = np.concatenate([motion, pad_poses], axis=0)
+        # r_motion = torch.tensor(r_motion)
         return r_motion, label
+
 
     def __len__(self):
         return len(self.dataset)
