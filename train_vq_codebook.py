@@ -116,8 +116,8 @@ if __name__ == '__main__':
     # train_split_file = pjoin(opt.data_root, 'train.txt')
     # val_split_file = pjoin(opt.data_root, 'val.txt')
 
-    enc_channels = [1024]
-    dec_channels = [1024, input_size]
+    enc_channels = [2048]
+    dec_channels = [2048, input_size]
 
     # vq_encoder = VQEncoderV2(dim_pose-4, opt.dim_vq_enc_hidden, opt.dim_vq_latent
 
@@ -145,22 +145,15 @@ if __name__ == '__main__':
     print("Total parameters of decoder net: {}".format(pc_vq_dec))
     all_params += pc_vq_dec
 
-    # pc_vq_dis = sum(param.numel() for param in discriminator.parameters())
-    # print(discriminator)
-    # print("Total parameters of discriminator net: {}".format(pc_vq_dis))
-    # all_params += pc_vq_dis
+    pc_vq_dis = sum(param.numel() for param in discriminator.parameters())
+    print(discriminator)
+    print("Total parameters of discriminator net: {}".format(pc_vq_dis))
+    all_params += pc_vq_dis
 
     print('Total parameters of all models: {}'.format(all_params))
 
     trainer = VQTokenizerTrainerV3(opt, vq_encoder, quantizer, vq_decoder, discriminator)
 
-    # train_dataset = data
-    # val_dataset = data
-
-    # train_loader = DataLoader(train_dataset, batch_size=opt.batch_size, drop_last=True, num_workers=4,
-    #                           shuffle=True, pin_memory=True)
-    # val_loader = DataLoader(val_dataset, batch_size=opt.batch_size, drop_last=True, num_workers=4,
-    #                         shuffle=True, pin_memory=True)
 
     logs = trainer.train(motion_loader, motion_loader)
     plot_loss(logs, os.path.join(opt.save_root, "loss_curve.png"), opt.plot_every)
