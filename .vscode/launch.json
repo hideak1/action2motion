@@ -14,7 +14,7 @@
             "args": [ 
                 "--name", "test2",
                 "--dataset_type", "humanact12",
-                "--batch_size", "1",
+                "--batch_size", "128",
                 "--motion_length", "24",
                 "--coarse_grained", 
                 "--lambda_kld", "0.001",
@@ -25,8 +25,7 @@
                 "--save_latest", "50",
                 "--time_counter",
                 "--iters", "50000",
-                "--n_down", "1",
-                "--gpu_id", "0"
+                "--n_down", "1"
             ]
         },
         {
@@ -37,12 +36,11 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test_24_1",
+                "--name", "test2",
                 "--dataset_type", "humanact12",
                 "--batch_size", "1",
                 "--motion_length", "24",
-                "--n_resblk", "3",
-                "--gpu_id", "0",
+                // "--n_resblk", "3",
                 "--coarse_grained",
                 "--n_down", "1"
             //     , 
@@ -64,15 +62,65 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test_24_1",
+                "--name", "test2",
                 "--dataset_type", "humanact12",
                 "--batch_size", "1",
                 "--motion_length", "24",
-                "--n_resblk", "3",
-                "--gpu_id", "0",
+                // "--n_resblk", "3",
                 "--coarse_grained",
                 "--n_down", "1"
             ]
+        },
+        {
+            "name": "Python: traina2m",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_action2motion.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [ 
+                "--name", "test2",
+                "--dataset_type", "humanact12",
+                "--batch_size", "6",
+                "--motion_length", "24",
+                "--coarse_grained", 
+                "--lambda_kld", "0.001",
+                "--eval_every", "2000",
+                "--plot_every", "50",
+                "--print_every", "20",
+                "--save_every", "2000",
+                "--save_latest", "50",
+                "--time_counter",
+                "--iters", "50000",
+                "--n_down", "1"
+            ]
+        },
+        {
+            "name": "Python: evaluation",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/evaluate_t2m_transformer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [ 
+                "--name", "test2",
+                "--dataset_type", "humanact12",
+                "--batch_size", "1",
+                "--motion_length", "24",
+                // "--n_resblk", "3",
+                "--coarse_grained",
+                "--n_down", "1"
+            //     , 
+            //     "--lambda_kld", "0.001",
+            //     "--eval_every", "2000",
+            //     "--plot_every", "50",
+            //     "--print_every", "20",
+            //     "--save_every", "2000",
+            //     "--save_latest", "50",
+            //     "--time_counter",
+            //     "--iters", "50000"
+            ]
         }
+
     ]
 }

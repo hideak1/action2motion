@@ -139,8 +139,8 @@ if __name__ == '__main__':
 
     opt.dim_category = len(data.labels)
 
-    enc_channels = [1024, opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, 1024, input_size]
+    enc_channels = [opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, input_size]
 
     vq_decoder, quantizer, a2m_transformer = build_models(opt)
 

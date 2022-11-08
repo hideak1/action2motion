@@ -117,8 +117,8 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 
-    enc_channels = [1024]
-    dec_channels = [1024, input_size]
+    enc_channels = [opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, input_size]
 
 
     vq_decoder, quantizer = build_models(opt)
