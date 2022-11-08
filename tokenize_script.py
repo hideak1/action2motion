@@ -21,7 +21,30 @@ import codecs as cs
 #         joint = recover_from_ric(torch.from_numpy(joint_data).float(), opt.joints_num).numpy()
 #         save_path = pjoin(save_dir, '%02d.mp4' % (i))
 #         plot_3d_motion(save_path, kinematic_chain, joint, title="None", fps=fps, radius=radius)
+def plot(data, label, result_path):
+    for i in range(data.shape[0]):
+        class_type = enumerator[label_dec[label]]
+        motion_orig = data[i]
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+        keypoint_path = os.path.join(result_path, 'keypoint')
+        if not os.path.exists(keypoint_path):
+            os.makedirs(keypoint_path)
+        file_name = os.path.join(result_path, class_type + str(i) + ".gif")
+        offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
+                                        motion_orig.shape[0], joints_num)
 
+        motion_mat = motion_orig - offset
+
+        motion_mat = motion_mat.reshape(-1, joints_num, 3)
+        np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
+
+        if opt.dataset_type == "humanact12":
+            plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
+        elif opt.dataset_type == "ntu_rgbd_vibe":
+            plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80)
+        elif opt.dataset_type == "mocap":
+            plot_3d_motion_v2(motion_mat, kinematic_chain, save_path=file_name, interval=80, dataset="mocap")
 
 def loadVQModel(opt):
     vq_encoder = VQEncoderV3(input_size - 4, enc_channels, opt.n_down)
@@ -31,7 +54,8 @@ def loadVQModel(opt):
                             map_location=opt.device)
     vq_encoder.load_state_dict(checkpoint['vq_encoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
-    return vq_encoder, quantizer
+    vq_decoder.load_state_dict(checkpoint['vq_decoder'])
+    return vq_encoder, quantizer, vq_decoder
 
 
 if __name__ == '__main__':
@@ -96,7 +120,7 @@ if __name__ == '__main__':
     enc_channels = [1024, opt.dim_vq_latent]
     dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
-    vq_encoder, quantizer = loadVQModel(opt)
+    vq_encoder, quantizer, vq_decoder = loadVQModel(opt)
 
     all_params = 0
     pc_vq_enc = sum(param.numel() for param in vq_encoder.parameters())
@@ -128,8 +152,10 @@ if __name__ == '__main__':
 
     vq_encoder.to(opt.device)
     quantizer.to(opt.device)
+    vq_decoder.to(opt.device)
     vq_encoder.eval()
     quantizer.eval()
+    vq_decoder.eval()
     with torch.no_grad():
         # Since our dataset loader introduces some randomness (not much), we could generate multiple token sequences
         # to increase the robustness.
@@ -143,6 +169,10 @@ if __name__ == '__main__':
                 indices = list(indices.cpu().numpy())
                 # indices = [start_token] + indices + [end_token] + [pad_token] * (max_length - len(indices) - 2)
                 indices = [str(token) for token in indices]
-                with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
-                    f.write(' '.join(indices))
-                    f.write('\n')
+                # with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
+                #     f.write(' '.join(indices))
+                #     f.write('\n')
+                _, vq_latents, _, _ = quantizer(pre_latents)
+                # print(self.vq_latents.shape)
+                recon_motions = vq_decoder(vq_latents)
+                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))

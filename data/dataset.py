@@ -294,6 +294,31 @@ class MotionDataset(data.Dataset):
     def __len__(self):
         return len(self.dataset)
 
+class VQVaeMotionDataset(data.Dataset):
+    def __init__(self, dataset, opt):
+        self.dataset = dataset
+        self.motion_length = opt.motion_length
+        self.opt = opt
+
+    def __getitem__(self, item):
+        motion, label = self.dataset[item]
+        motion = np.array(motion)
+        motion_len = motion.shape[0]
+        # Motion can be of various length, we randomly sample sub-sequence
+        # or repeat the last pose for padding
+
+       
+        gap = motion_len - self.motion_length
+        start = 0 if gap == 0 else np.random.randint(0, gap, 1)[0]
+        end = start + self.motion_length
+        r_motion = motion[start:end]
+        # offset deduction
+        r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
+        return r_motion, label
+
+    def __len__(self):
+        return len(self.dataset)
+
 
 class MotionTokenizeDataset(data.Dataset):
     def __init__(self, dataset, opt):

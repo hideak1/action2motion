@@ -4,22 +4,22 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-        
-
         {
-            "name": "Python: Current File",
+            "name": "Python: vqvae train",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/train_vq_codebook.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test2",
+                "--name", "test1010",
                 "--dataset_type", "humanact12",
                 "--batch_size", "1",
-                "--motion_length", "60",
-                "--coarse_grained", 
+                "--motion_length", "24",
+                "--n_resblk", "3",
+                "--gpu_id", "0",
+                "--coarse_grained"
+                , 
                 "--lambda_kld", "0.001",
                 "--eval_every", "2000",
                 "--plot_every", "50",
@@ -28,6 +28,32 @@
                 "--save_latest", "50",
                 "--time_counter",
                 "--iters", "50000"
+            ]
+        },
+        {
+            "name": "Python: visualize token",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [ 
+                "--name", "test1010",
+                "--dataset_type", "humanact12",
+                "--batch_size", "1",
+                "--motion_length", "60",
+                "--n_resblk", "3",
+                "--gpu_id", "0",
+                "--coarse_grained"
+            //     , 
+            //     "--lambda_kld", "0.001",
+            //     "--eval_every", "2000",
+            //     "--plot_every", "50",
+            //     "--print_every", "20",
+            //     "--save_every", "2000",
+            //     "--save_latest", "50",
+            //     "--time_counter",
+            //     "--iters", "50000"
             ]
         }
     ]
