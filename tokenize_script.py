@@ -84,7 +84,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
         enumerator = paramUtil.humanact12_coarse_action_enumerator
-        data = dataset.MotionFolderDatasetHumanAct12(opt.data_root, opt, lie_enforce=opt.lie_enforce)
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce)
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
     print('Total parameters of all models: {}'.format(all_params))
 
-    all_dataset = dataset.MotionDataset(data, opt)
+    all_dataset = dataset.VQVaeMotionDataset(data, opt)
 
     all_loader = DataLoader(all_dataset, batch_size=1, num_workers=1, pin_memory=True)
 
@@ -169,10 +169,10 @@ if __name__ == '__main__':
                 indices = list(indices.cpu().numpy())
                 # indices = [start_token] + indices + [end_token] + [pad_token] * (max_length - len(indices) - 2)
                 indices = [str(token) for token in indices]
-                # with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
-                #     f.write(' '.join(indices))
-                #     f.write('\n')
-                _, vq_latents, _, _ = quantizer(pre_latents)
+                with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
+                    f.write(' '.join(indices))
+                    f.write('\n')
+                # _, vq_latents, _, _ = quantizer(pre_latents)
                 # print(self.vq_latents.shape)
-                recon_motions = vq_decoder(vq_latents)
-                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))
+                # recon_motions = vq_decoder(vq_latents)
+                # plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))
