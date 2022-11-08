@@ -663,7 +663,7 @@ class VQTokenizerTrainerV3(Trainer):
         epoch = 0
         it = 0
         if self.opt.is_continue:
-            model_dir = pjoin(self.opt.model_dir, 'latest.tar')
+            model_dir = pjoin(self.opt.model_dir, 'finest.tar')
             epoch, it = self.resume(model_dir)
             print("Load model epoch:%d iterations:%d"%(epoch, it))
 
