@@ -3,3 +3,5 @@
 /eval_results
 /log
 *.pyc
+**/*.pyc
+**/__pycache__

@@ -23,8 +23,9 @@ class Quantizer(nn.Module):
         :return z_q:
         """
         assert z.shape[-1] == self.e_dim
+        # 15 * 1024
         z_flattened = z.contiguous().view(-1, self.e_dim)
-
+        # 15 * 1 + 1024 - 15*1024
         # B x V
         d = torch.sum(z_flattened ** 2, dim=1, keepdim=True) + \
             torch.sum(self.embedding.weight**2, dim=1) - 2 * \

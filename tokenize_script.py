@@ -117,8 +117,8 @@ if __name__ == '__main__':
 
     # all_split_file = pjoin(opt.data_root, 'all.txt')
 
-    enc_channels = [1024, opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, 1024, input_size]
+    enc_channels = [1024]
+    dec_channels = [1024, input_size]
 
     vq_encoder, quantizer, vq_decoder = loadVQModel(opt)
 
