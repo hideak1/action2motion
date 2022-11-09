@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     dataset_path = ""
     joints_num = 0
-    input_size = 72
+    input_size = 54
     data = None
 
     if opt.dataset_type == "humanact12":
@@ -87,8 +87,8 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.vibe_raw_offsets
         kinematic_chain = paramUtil.vibe_kinematic_chain
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
-        label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
+                                               extract_joints=paramUtil.kinect_vibe_extract_joints)
+        label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102] #13
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 

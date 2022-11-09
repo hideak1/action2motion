@@ -107,7 +107,7 @@ if __name__ == '__main__':
         kinematic_chain = paramUtil.vibe_kinematic_chain
         label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+                                               extract_joints=paramUtil.kinect_vibe_extract_joints)
         enumerator = paramUtil.ntu_action_enumerator
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
     all_loader = DataLoader(all_dataset, batch_size=1, num_workers=1, pin_memory=True)
 
-    token_data_dir = pjoin(opt.data_root, opt.tokenizer_name)
+    token_data_dir = pjoin(file_prefix, opt.tokenizer_name)
     os.makedirs(token_data_dir, exist_ok=True)
 
     start_token = opt.codebook_size

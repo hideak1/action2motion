@@ -253,7 +253,7 @@ class MotionFolderDatasetHumanAct12V2(data.Dataset):
         return pose_mat, label
 
 class MotionFolderDatasetNtuVIBE(data.Dataset):
-    def __init__(self, file_prefix, candi_list_desc, labels, opt, joints_num=18, do_offset=True, extract_joints=None):
+    def __init__(self, file_prefix, candi_list_desc, labels, opt, joints_num=18, do_offset=True, extract_joints=None): # 可能会改成extract_joints=paramUtil.kinect_vibe_extract_joints
         self.data = []
         self.labels = labels
         self.lengths = []
@@ -480,10 +480,11 @@ class ActionTokenDataset(data.Dataset):
         self.w_vectorizer = w_vectorizer
         data_dict = {}
         self.label_list = []
+        file_prefix = "./dataset"
         for i, data in enumerate(tqdm(dataset)):
                 motion, name = data
                 m_token_list = []
-                with cs.open(pjoin(opt.data_root, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
+                with cs.open(pjoin(file_prefix, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
                     for line in f.readlines():
                         m_token_list.append(line.strip().split(' '))
                     data_dict[name] = m_token_list
@@ -628,10 +629,11 @@ class TestActionTokenDataset(data.Dataset):
         self.w_vectorizer = w_vectorizer
         data_dict = {}
         self.label_list = []
+        file_prefix = "./dataset"
         for i, data in enumerate(tqdm(dataset)):
                 motion, name = data
                 m_token_list = []
-                with cs.open(pjoin(opt.data_root, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
+                with cs.open(pjoin(file_prefix, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
                     for line in f.readlines():
                         m_token_list.append(line.strip().split(' '))
                     data_dict[name] = {}

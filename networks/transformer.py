@@ -154,7 +154,7 @@ class EncoderDoNothing(nn.Module):
         enc_slf_attn_list = []
         
         if input_onehot:
-            src_seq = torch.matmul(src_seq, self.src_word_emb.weight)
+            src_seq = torch.matmul(src_seq, self.src_word_emb.weight)  # seq = 6*13  wigth = 12*12
             # print(src_seq.shape, src_mask.shape)
             src_seq = src_seq * src_mask.transpose(1, 2)
         else:

@@ -51,7 +51,7 @@ def build_models(opt):
     vq_decoder.load_state_dict(checkpoint['vq_decoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
 
-    a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
+    a2m_transformer = TransformerV5(13, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
                                     d_trg_word_vec=12,
                                     d_model=12, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.vibe_raw_offsets
         kinematic_chain = paramUtil.vibe_kinematic_chain
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+                                               extract_joints=paramUtil.kinect_vibe_extract_joints)
         enumerator = paramUtil.ntu_action_enumerator
         label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
     else:

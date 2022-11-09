@@ -13,11 +13,11 @@
             "justMyCode": true,
             "args": [ 
                 "--name", "test2",
-                "--dataset_type", "humanact12",
+                "--dataset_type", "ntu_rgbd_vibe",
                 "--batch_size", "128",
-                "--motion_length", "24",
+                "--motion_length", "60",
                 "--coarse_grained", 
-                "--lambda_kld", "0.001",
+                "--lambda_kld", "0.01",
                 "--eval_every", "2000",
                 "--plot_every", "50",
                 "--print_every", "20",
@@ -37,9 +37,9 @@
             "justMyCode": true,
             "args": [ 
                 "--name", "test2",
-                "--dataset_type", "humanact12",
+                "--dataset_type", "ntu_rgbd_vibe",
                 "--batch_size", "1",
-                "--motion_length", "24",
+                "--motion_length", "60",
                 // "--n_resblk", "3",
                 "--coarse_grained",
                 "--n_down", "1"
@@ -63,9 +63,9 @@
             "justMyCode": true,
             "args": [ 
                 "--name", "test2",
-                "--dataset_type", "humanact12",
+                "--dataset_type", "ntu_rgbd_vibe",
                 "--batch_size", "1",
-                "--motion_length", "24",
+                "--motion_length", "60",
                 // "--n_resblk", "3",
                 "--coarse_grained",
                 "--n_down", "1"
@@ -80,11 +80,11 @@
             "justMyCode": true,
             "args": [ 
                 "--name", "test2",
-                "--dataset_type", "humanact12",
+                "--dataset_type", "ntu_rgbd_vibe",
                 "--batch_size", "6",
-                "--motion_length", "24",
+                "--motion_length", "60",
                 "--coarse_grained", 
-                "--lambda_kld", "0.001",
+                "--lambda_kld", "0.01",
                 "--eval_every", "2000",
                 "--plot_every", "50",
                 "--print_every", "20",
@@ -104,9 +104,9 @@
             "justMyCode": true,
             "args": [ 
                 "--name", "test2",
-                "--dataset_type", "humanact12",
+                "--dataset_type", "ntu_rgbd_vibe",
                 "--batch_size", "1",
-                "--motion_length", "24",
+                "--motion_length", "60",
                 // "--n_resblk", "3",
                 "--coarse_grained",
                 "--n_down", "1"
