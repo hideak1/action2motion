@@ -66,7 +66,7 @@ if __name__ == '__main__':
         joints_num = 24
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
-        data = dataset.MotionFolderDatasetHumanAct12V2(dataset_path, opt, lie_enforce=opt.lie_enforce)
+        data = dataset.MotionFolderDatasetHumanAct12V2(dataset_path, opt, lie_enforce=opt.lie_enforce, do_offset=False)
 
     elif opt.dataset_type == "mocap":
         dataset_path = "./dataset/mocap/mocap_3djoints/"

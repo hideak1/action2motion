@@ -130,18 +130,40 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
         # ax.lines = []
         # ax.collections = []
         ax.clear()
+        if dataset == "mocap":
+            ax.set_ylim(-1.5, 1.5)
+            ax.set_xlim(0, 3)
+            ax.set_zlim(-1.5, 1.5)
+        else:
+            ax.set_ylim(-1, 1)
+            ax.set_xlim(-1, 1)
+            ax.set_zlim(0, 3)
         for chain, color in zip(kinematic_tree, colors):
             ax.plot3D(motion[index, chain, 0], motion[index, chain, 1], motion[index, chain, 2], linewidth=4.0, color=color)
+        
+        # plt.axis('off')
         # plt.axis()
         # ax.set_xticklabels([])
         # ax.set_yticklabels([])
         # ax.set_zticklabels([])
 
+    # def update2(index, dataLines, lines):
+    #     # ax.lines = []
+    #     # ax.collections = []
+    #     for chain, line, color in zip(kinematic_tree, lines, colors):
+    #         line.set_data_3d(data[:index, chain, 0:3])
+    #         # line.set_3d_properties(data[:index, chain, 2])
+    #         line.set_color(color)
+    #     return lines
+    # for chain, color in zip(kinematic_tree, colors):
+    #     print(f'{chain} and {color}')
+    # lines = [ax.plot3D(motion[0, chain, 0], motion[0, chain, 1], motion[0, chain, 2], linewidth=4.0, color=color) for chain, color in zip(kinematic_tree, colors) ]
     ani = FuncAnimation(fig, update, frames=frame_number, interval=interval, repeat=False, repeat_delay=200)
     # update(1)
     # plt.show()
     # Writer = writers['ffmpeg']
     # writer = Writer(fps=15, metadata={})
+    
     ani.save(save_path, writer='pillow')
     plt.close()
     # print('aaa')
