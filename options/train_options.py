@@ -57,6 +57,7 @@ class TrainOptions(BaseOptions):
 
         self.parser.add_argument('--start_dis_epoch', type=float, default=10, help='Layers of GRU')
 
+        self.parser.add_argument('--lr_scheduler_every_e', type=int, default=50, help='Frequency of update lr')
 
         self.parser.add_argument('--use_gan', action="store_true", help='Training iterations')
 
