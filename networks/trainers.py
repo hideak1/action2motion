@@ -629,6 +629,11 @@ class VQTokenizerTrainerV3(Trainer):
             'opt_vq_decoder': self.opt_vq_decoder.state_dict(),
             'opt_discriminator': self.opt_discriminator.state_dict(),
 
+            'opt_vq_encoder_lr': self.opt_vq_encoder_lr.state_dict(),
+            'opt_quantizer_lr': self.opt_quantizer_lr.state_dict(),
+            'opt_vq_decoder_lr': self.opt_vq_decoder_lr.state_dict(),
+            'opt_discriminator_lr': self.opt_discriminator_lr.state_dict(),
+
             'ep': ep,
             'total_it': total_it,
         }
@@ -640,13 +645,18 @@ class VQTokenizerTrainerV3(Trainer):
         self.quantizer.load_state_dict(checkpoint['quantizer'])
         self.vq_decoder.load_state_dict(checkpoint['vq_decoder'])
 
-        self.opt_vq_encoder.load_state_dict(checkpoint['opt_vq_encoder'])
-        self.opt_quantizer.load_state_dict(checkpoint['opt_quantizer'])
-        self.opt_vq_decoder.load_state_dict(checkpoint['opt_vq_decoder'])
+        # self.opt_vq_encoder.load_state_dict(checkpoint['opt_vq_encoder'])
+        # self.opt_quantizer.load_state_dict(checkpoint['opt_quantizer'])
+        # self.opt_vq_decoder.load_state_dict(checkpoint['opt_vq_decoder'])
+
+        # self.opt_vq_encoder_lr.load_state_dict(checkpoint['opt_vq_encoder_lr'])
+        # self.opt_quantizer_lr.load_state_dict(checkpoint['opt_quantizer_lr'])
+        # self.opt_vq_decoder_lr.load_state_dict(checkpoint['opt_vq_decoder_lr'])
 
         # if self.opt.use_gan:
         self.discriminator.load_state_dict(checkpoint['discriminator'])
         self.opt_discriminator.load_state_dict(checkpoint['opt_discriminator'])
+        # self.opt_discriminator_lr.load_state_dict(checkpoint['opt_discriminator_lr'])
         return checkpoint['ep'], checkpoint['total_it']
 
     def train(self, train_dataloader, val_dataloader, plot_eval = None):
@@ -659,6 +669,12 @@ class VQTokenizerTrainerV3(Trainer):
         self.opt_quantizer = optim.Adam(self.quantizer.parameters(), lr=self.opt.lr)
         self.opt_vq_decoder = optim.Adam(self.vq_decoder.parameters(), lr=self.opt.lr)
         self.opt_discriminator = optim.Adam(self.discriminator.parameters(), lr=self.opt.lr)
+
+
+        self.opt_vq_encoder_lr = torch.optim.lr_scheduler.ExponentialLR(self.opt_vq_encoder, gamma=0.98)
+        self.opt_quantizer_lr = torch.optim.lr_scheduler.ExponentialLR(self.opt_quantizer, gamma=0.98)
+        self.opt_vq_decoder_lr = torch.optim.lr_scheduler.ExponentialLR(self.opt_vq_decoder, gamma=0.98)
+        self.opt_discriminator_lr = torch.optim.lr_scheduler.ExponentialLR(self.opt_discriminator, gamma=0.98)
 
         epoch = 0
         it = 0
@@ -708,6 +724,7 @@ class VQTokenizerTrainerV3(Trainer):
                         mean_loss[tag] = value / self.opt.log_every
                     logs = OrderedDict()
                     print_current_loss(start_time, it, total_iters, mean_loss, epoch, i)
+                    log({'epoch': epoch, 'train_loss': mean_loss}, self.opt)
 
                 if it % self.opt.save_latest == 0:
                     self.save(pjoin(self.opt.model_dir, 'latest.tar'), epoch, it)
@@ -718,6 +735,11 @@ class VQTokenizerTrainerV3(Trainer):
             if epoch % self.opt.save_every_e == 0:
                 self.save(pjoin(self.opt.model_dir, 'E%04d.tar' % (epoch)), epoch, total_it=it)
 
+            if epoch % self.opt.lr_scheduler_every_e == 0:
+                self.step([self.opt_vq_encoder_lr, self.opt_quantizer_lr, self.opt_vq_decoder_lr])
+                if self.opt.start_use_gan:
+                    self.step([self.opt_discriminator_lr])
+                print(f'current lr: {self.opt_vq_encoder_lr.get_lr()}')
             print('Validation time:')
 
             val_loss_rec = 0
@@ -735,6 +757,7 @@ class VQTokenizerTrainerV3(Trainer):
             # val_loss_emb = val_loss_emb / (len(val_dataloader) + 1)
 
             print('Validation Loss: %.5f' % (val_loss))
+            log({'epoch': epoch, 'eval_loss': val_loss, 'lr': self.opt_vq_encoder_lr.get_lr()}, self.opt)
 
             if val_loss < min_val_loss:
                 min_val_loss = val_loss
@@ -884,6 +907,7 @@ class TransformerA2MTrainer(Trainer):
                         mean_loss[tag] = value / self.opt.log_every
                     logs = OrderedDict()
                     print_current_loss(start_time, it, total_iters, mean_loss, epoch, i)
+                    log({'epoch': epoch, 'train_loss': mean_loss}, self.opt)
 
                 if it % self.opt.save_latest == 0:
                     self.save(pjoin(self.opt.model_dir, 'latest.tar'), epoch, it)
@@ -916,6 +940,7 @@ class TransformerA2MTrainer(Trainer):
             print(self.pred_seq.view(self.gold.shape)[0])
 
             print('Validation Loss: %.5f Validation Accuracy: %.4f' % (val_loss, val_accuracy))
+            log({'epoch': epoch, 'eval_loss': val_loss}, self.opt)
 
             if val_loss < min_val_loss:
                 min_val_loss = val_loss

@@ -41,7 +41,7 @@ if __name__ == '__main__':
         joints_num = 24
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
-        data = dataset.MotionFolderDatasetHumanAct12(opt.data_root, opt, lie_enforce=opt.lie_enforce)
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset = False)
         label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
     elif opt.dataset_type == "mocap":
@@ -81,8 +81,8 @@ if __name__ == '__main__':
 
     opt.dim_category = len(data.labels)
 
-    enc_channels = [1024, opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, 1024, input_size]
+    enc_channels = [opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, input_size]
 
     # if opt.t2m_v2:
     # a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,

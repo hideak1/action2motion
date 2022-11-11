@@ -43,7 +43,9 @@ if __name__ == '__main__':
     opt = parser.parse()
 
     opt.device = torch.device("cuda:" + str(opt.gpu_id) if torch.cuda.is_available() else "cpu")
-
+    if opt.use_wandb:
+        import wandb
+        wandb.init(project='ece740-a2m', config=opt)
     opt.save_root = os.path.join(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, opt.tokenizer_name)
     opt.model_dir = pjoin(opt.save_root, 'model')
     opt.joints_path = os.path.join(opt.save_root, 'joints')
@@ -66,7 +68,7 @@ if __name__ == '__main__':
         joints_num = 24
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
-        data = dataset.MotionFolderDatasetHumanAct12V2(dataset_path, opt, lie_enforce=opt.lie_enforce)
+        data = dataset.MotionFolderDatasetHumanAct12V2(dataset_path, opt, lie_enforce=opt.lie_enforce, do_offset=False)
 
     elif opt.dataset_type == "mocap":
         dataset_path = "./dataset/mocap/mocap_3djoints/"

@@ -197,6 +197,8 @@ class MotionFolderDatasetHumanAct12V2(data.Dataset):
                 for i in range(pose_raw.shape[0] - 1, 0, -1):
                     offset_mat = np.tile(pose_raw[i - 1, 0], (pose_raw.shape[1], 1))
                     pose_mat[i] = pose_raw[i] - offset_mat
+                # offset_mat = np.tile(pose_raw[0, 0], (pose_raw.shape[1], 1))
+                # pose_mat = pose_raw - offset_mat
             else:
                 pose_mat = pose_raw
 
@@ -400,16 +402,19 @@ class VQVaeMotionDataset(data.Dataset):
             start = 0 if gap == 0 else np.random.randint(0, gap, 1)[0]
             end = start + self.motion_length
             r_motion = motion[start:end]
-            # offset deduction
-            r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
         # padding
         else:
             gap = self.motion_length - motion_len
             last_pose = np.expand_dims(motion[-1], axis=0)
             pad_poses = np.repeat(last_pose, gap, axis=0)
             r_motion = np.concatenate([motion, pad_poses], axis=0)
+        pose_mat = r_motion
+        # get the offset and return the final pose
+        for i in range(r_motion.shape[0] - 1, 0, -1):
+            offset_mat = np.tile(r_motion[i - 1, :3], (1, int(r_motion.shape[-1]/3)))
+            pose_mat[i] = r_motion[i] - offset_mat
         # r_motion = torch.tensor(r_motion)
-        return r_motion, label
+        return pose_mat, label
 
 
     def __len__(self):

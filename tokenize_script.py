@@ -21,7 +21,7 @@ import codecs as cs
 #         joint = recover_from_ric(torch.from_numpy(joint_data).float(), opt.joints_num).numpy()
 #         save_path = pjoin(save_dir, '%02d.mp4' % (i))
 #         plot_3d_motion(save_path, kinematic_chain, joint, title="None", fps=fps, radius=radius)
-def plot(data, label, result_path):
+def plot(data, label, result_path, do_offset = True):
     for i in range(data.shape[0]):
         class_type = enumerator[label_dec[label]]
         motion_orig = data[i]
@@ -31,10 +31,14 @@ def plot(data, label, result_path):
         if not os.path.exists(keypoint_path):
             os.makedirs(keypoint_path)
         file_name = os.path.join(result_path, class_type + str(i) + ".gif")
-        offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
-                                        motion_orig.shape[0], joints_num)
+        motion_mat = motion_orig
 
-        motion_mat = motion_orig - offset
+        if do_offset:
+            for j in range(1, motion_orig.shape[0], 1):
+                offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+                                            1, joints_num)
+
+                motion_mat[j] = motion_orig[j] + offset
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -84,7 +88,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
         enumerator = paramUtil.humanact12_coarse_action_enumerator
-        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce)
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=False)
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -172,7 +176,7 @@ if __name__ == '__main__':
                 with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
                     f.write(' '.join(indices))
                     f.write('\n')
-                # _, vq_latents, _, _ = quantizer(pre_latents)
-                # print(self.vq_latents.shape)
-                # recon_motions = vq_decoder(vq_latents)
-                # plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))
+                _, vq_latents, _, _ = quantizer(pre_latents)
+                recon_motions = vq_decoder(vq_latents)
+                plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])))
+                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))

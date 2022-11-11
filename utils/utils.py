@@ -168,3 +168,10 @@ def motion_temporal_filter(motion, sigma=1):
         motion[:, i] = gaussian_filter(motion[:, i], sigma=sigma, mode="nearest")
     return motion.reshape(motion.shape[0], -1, 3)
 
+def log(data, opt):
+  if opt.use_wandb:
+    try:
+      wandb.log(data)
+    except NameError:
+      import wandb
+      wandb.log(data)
