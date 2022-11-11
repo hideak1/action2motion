@@ -118,8 +118,8 @@ if __name__ == '__main__':
     # train_split_file = pjoin(opt.data_root, 'train.txt')
     # val_split_file = pjoin(opt.data_root, 'val.txt')
 
-    enc_channels = [opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, input_size]
+    enc_channels = [1024, opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
     # vq_encoder = VQEncoderV2(dim_pose-4, opt.dim_vq_enc_hidden, opt.dim_vq_latent
 
