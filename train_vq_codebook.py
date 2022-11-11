@@ -43,7 +43,9 @@ if __name__ == '__main__':
     opt = parser.parse()
 
     opt.device = torch.device("cuda:" + str(opt.gpu_id) if torch.cuda.is_available() else "cpu")
-
+    if opt.use_wandb:
+        import wandb
+        wandb.init(project='ece740-a2m', config=opt)
     opt.save_root = os.path.join(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, opt.tokenizer_name)
     opt.model_dir = pjoin(opt.save_root, 'model')
     opt.joints_path = os.path.join(opt.save_root, 'joints')

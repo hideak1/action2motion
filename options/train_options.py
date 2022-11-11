@@ -61,6 +61,8 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--use_gan', action="store_true", help='Training iterations')
 
         self.parser.add_argument('--use_feat_M', action="store_true", help='Training iterations')
+
+        self.parser.add_argument('--use_wandb', action="store_true", help='use wandb')
         self.is_train = True
 
 class Action2MotionOptions(TrainOptions):

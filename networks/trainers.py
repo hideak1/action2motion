@@ -708,6 +708,7 @@ class VQTokenizerTrainerV3(Trainer):
                         mean_loss[tag] = value / self.opt.log_every
                     logs = OrderedDict()
                     print_current_loss(start_time, it, total_iters, mean_loss, epoch, i)
+                    log({'epoch': epoch, 'train_loss': mean_loss}, self.opt)
 
                 if it % self.opt.save_latest == 0:
                     self.save(pjoin(self.opt.model_dir, 'latest.tar'), epoch, it)
@@ -735,6 +736,7 @@ class VQTokenizerTrainerV3(Trainer):
             # val_loss_emb = val_loss_emb / (len(val_dataloader) + 1)
 
             print('Validation Loss: %.5f' % (val_loss))
+            log({'epoch': epoch, 'eval_loss': val_loss}, self.opt)
 
             if val_loss < min_val_loss:
                 min_val_loss = val_loss
@@ -884,6 +886,7 @@ class TransformerA2MTrainer(Trainer):
                         mean_loss[tag] = value / self.opt.log_every
                     logs = OrderedDict()
                     print_current_loss(start_time, it, total_iters, mean_loss, epoch, i)
+                    log({'epoch': epoch, 'train_loss': mean_loss}, self.opt)
 
                 if it % self.opt.save_latest == 0:
                     self.save(pjoin(self.opt.model_dir, 'latest.tar'), epoch, it)
@@ -916,6 +919,7 @@ class TransformerA2MTrainer(Trainer):
             print(self.pred_seq.view(self.gold.shape)[0])
 
             print('Validation Loss: %.5f Validation Accuracy: %.4f' % (val_loss, val_accuracy))
+            log({'epoch': epoch, 'eval_loss': val_loss}, self.opt)
 
             if val_loss < min_val_loss:
                 min_val_loss = val_loss
