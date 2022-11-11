@@ -649,14 +649,14 @@ class VQTokenizerTrainerV3(Trainer):
         self.opt_quantizer.load_state_dict(checkpoint['opt_quantizer'])
         self.opt_vq_decoder.load_state_dict(checkpoint['opt_vq_decoder'])
 
-        self.opt_vq_encoder_lr.load_state_dict(checkpoint['opt_vq_encoder_lr'])
-        self.opt_quantizer_lr.load_state_dict(checkpoint['opt_quantizer_lr'])
-        self.opt_vq_decoder_lr.load_state_dict(checkpoint['opt_vq_decoder_lr'])
+        # self.opt_vq_encoder_lr.load_state_dict(checkpoint['opt_vq_encoder_lr'])
+        # self.opt_quantizer_lr.load_state_dict(checkpoint['opt_quantizer_lr'])
+        # self.opt_vq_decoder_lr.load_state_dict(checkpoint['opt_vq_decoder_lr'])
 
         # if self.opt.use_gan:
         self.discriminator.load_state_dict(checkpoint['discriminator'])
         self.opt_discriminator.load_state_dict(checkpoint['opt_discriminator'])
-        self.opt_discriminator_lr.load_state_dict(checkpoint['opt_discriminator_lr'])
+        # self.opt_discriminator_lr.load_state_dict(checkpoint['opt_discriminator_lr'])
         return checkpoint['ep'], checkpoint['total_it']
 
     def train(self, train_dataloader, val_dataloader, plot_eval = None):
