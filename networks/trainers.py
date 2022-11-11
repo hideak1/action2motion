@@ -645,9 +645,9 @@ class VQTokenizerTrainerV3(Trainer):
         self.quantizer.load_state_dict(checkpoint['quantizer'])
         self.vq_decoder.load_state_dict(checkpoint['vq_decoder'])
 
-        self.opt_vq_encoder.load_state_dict(checkpoint['opt_vq_encoder'])
-        self.opt_quantizer.load_state_dict(checkpoint['opt_quantizer'])
-        self.opt_vq_decoder.load_state_dict(checkpoint['opt_vq_decoder'])
+        # self.opt_vq_encoder.load_state_dict(checkpoint['opt_vq_encoder'])
+        # self.opt_quantizer.load_state_dict(checkpoint['opt_quantizer'])
+        # self.opt_vq_decoder.load_state_dict(checkpoint['opt_vq_decoder'])
 
         # self.opt_vq_encoder_lr.load_state_dict(checkpoint['opt_vq_encoder_lr'])
         # self.opt_quantizer_lr.load_state_dict(checkpoint['opt_quantizer_lr'])
