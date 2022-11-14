@@ -194,9 +194,9 @@ class MotionFolderDatasetHumanAct12V2(data.Dataset):
             if do_offset:
                 pose_mat = pose_raw
                 # get the offset and return the final pose
-                for i in range(pose_raw.shape[0] - 1, 0, -1):
-                    offset_mat = np.tile(pose_raw[i - 1, 0], (pose_raw.shape[1], 1))
-                    pose_mat[i] = pose_raw[i] - offset_mat
+                # for i in range(pose_raw.shape[0] - 1, 0, -1):
+                #     offset_mat = np.tile(pose_raw[i - 1, 0], (pose_raw.shape[1], 1))
+                #     pose_mat[i] = pose_raw[i] - offset_mat
                 # offset_mat = np.tile(pose_raw[0, 0], (pose_raw.shape[1], 1))
                 # pose_mat = pose_raw - offset_mat
             else:
@@ -369,7 +369,7 @@ class MotionDataset(data.Dataset):
             end = start + self.motion_length
             r_motion = motion[start:end]
             # offset deduction
-            r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
+            # r_motion = r_motion - np.tile(r_motion[0, :3], (1, int(r_motion.shape[-1]/3)))
         # padding
         else:
             gap = self.motion_length - motion_len
@@ -410,10 +410,13 @@ class VQVaeMotionDataset(data.Dataset):
             r_motion = np.concatenate([motion, pad_poses], axis=0)
         pose_mat = r_motion
         # get the offset and return the final pose
-        for i in range(r_motion.shape[0] - 1, 0, -1):
-            offset_mat = np.tile(r_motion[i - 1, :3], (1, int(r_motion.shape[-1]/3)))
-            pose_mat[i] = r_motion[i] - offset_mat
+        # for i in range(r_motion.shape[0] - 1, 0, -1):
+        #     offset_mat = np.tile(r_motion[i - 1, :3], (1, int(r_motion.shape[-1]/3)))
+        #     pose_mat[i] = r_motion[i] - offset_mat
+        # offset_mat = np.tile([[0, 0, 2]], (1, int(r_motion.shape[-1]/3)))
+        # pose_mat[0] = r_motion[0] - offset_mat
         # r_motion = torch.tensor(r_motion)
+        pose_mat = (pose_mat - self.opt.mean) / self.opt.std
         return pose_mat, label
 
 

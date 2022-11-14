@@ -4,7 +4,7 @@ from options.base_options import BaseOptions
 class TestOptions(BaseOptions):
     def initialize(self):
         BaseOptions.initialize(self)
-        self.parser.add_argument('--which_epoch', type=str, default="latest", help='Epoch which is loaded for evaluation')
+        self.parser.add_argument('--which_epoch', type=str, default="finest", help='Epoch which is loaded for evaluation')
         self.parser.add_argument('--result_path', type=str, default="./eval_results/vae/", help='Save path of animation results')
 
         # Either replic_times or do_random is activated at one time

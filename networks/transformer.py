@@ -714,13 +714,12 @@ class TransformerV6(nn.Module):
         seq_logit = self.trg_word_prj(dec_output)
         return seq_logit
 
-    def sample(self, src_seq, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None):
+    def sample(self, src_seq, src_non_pad_lens, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None, input_onehot=False):
         trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
 
-        # batch_size, src_seq_len = src_seq.shape[0], src_seq.shape[1]
-        # src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
-        src_mask = get_pad_mask_idx(src_seq, self.src_pad_idx)
-        enc_output, *_ = self.encoder(src_seq, src_mask)
+        batch_size, src_seq_len = src_seq.shape[0], src_seq.shape[1]
+        src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
+        enc_output, *_ = self.encoder(src_seq, src_mask, input_onehot=input_onehot)
 
         for _ in range(max_steps):
             # print(trg_seq)
@@ -740,7 +739,7 @@ class TransformerV6(nn.Module):
 
             if sample:
                 ix = torch.multinomial(probs, num_samples=1)
-                while (ix[0] in [trg_sos, trg_eos]):
+                while (ix[0] in [trg_sos, trg_eos, self.trg_pad_idx]):
                     ix = torch.multinomial(probs, num_samples=1)
             trg_seq = torch.cat((trg_seq, ix), dim=1)
         return trg_seq

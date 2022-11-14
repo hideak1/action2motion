@@ -33,12 +33,18 @@ def plot(data, label, result_path, do_offset = True):
         file_name = os.path.join(result_path, class_type + str(i) + ".gif")
         motion_mat = motion_orig
 
-        if do_offset:
-            for j in range(1, motion_orig.shape[0], 1):
-                offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
-                                            1, joints_num)
+        # if do_offset:
+        #     for j in range(1, motion_orig.shape[0], 1):
+        #         offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+        #                                     1, joints_num)
 
-                motion_mat[j] = motion_orig[j] + offset
+        #         motion_mat[j] = motion_orig[j] + offset
+
+        # offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
+        #                                 motion_orig.shape[0], joints_num)
+        # motion_mat = motion_orig + offset
+
+        motion_mat = motion_mat * opt.std + opt.mean
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -119,10 +125,13 @@ if __name__ == '__main__':
     # mean = np.load(pjoin(opt.meta_dir, 'mean.npy'))
     # std = np.load(pjoin(opt.meta_dir, 'std.npy'))
 
+    opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
+    opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
+
     # all_split_file = pjoin(opt.data_root, 'all.txt')
 
-    enc_channels = [opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, input_size]
+    enc_channels = [1024, opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
     vq_encoder, quantizer, vq_decoder = loadVQModel(opt)
 
@@ -176,7 +185,7 @@ if __name__ == '__main__':
                 with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
                     f.write(' '.join(indices))
                     f.write('\n')
-                _, vq_latents, _, _ = quantizer(pre_latents)
-                recon_motions = vq_decoder(vq_latents)
-                plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])))
-                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])))
+                # _, vq_latents, _, _ = quantizer(pre_latents)
+                # recon_motions = vq_decoder(vq_latents)
+                # plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])), do_offset = False)
+                # plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])), do_offset = False)

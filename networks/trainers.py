@@ -850,7 +850,7 @@ class TransformerA2MTrainer(Trainer):
         checkpoint = torch.load(model_dir, map_location=self.device)
         self.transformer.load_state_dict(checkpoint['transformer'])
 
-        self.opt_transformer.load_state_dict(checkpoint['opt_transformer'])
+        # self.opt_transformer.load_state_dict(checkpoint['opt_transformer'])
         # if self.opt.use_gan:
         #     self.discriminator.load_state_dict(checkpoint['discriminator'])
         #     self.opt_discriminator.load_state_dict(checkpoint['opt_discriminator'])
@@ -864,6 +864,7 @@ class TransformerA2MTrainer(Trainer):
 
         self.opt_transformer = optim.Adam(self.transformer.parameters(), lr=self.opt.lr)
 
+        self.opt_transformer_lr = torch.optim.lr_scheduler.ExponentialLR(self.opt_transformer, gamma=0.98)
 
         epoch = 0
         it = 0
@@ -907,7 +908,7 @@ class TransformerA2MTrainer(Trainer):
                         mean_loss[tag] = value / self.opt.log_every
                     logs = OrderedDict()
                     print_current_loss(start_time, it, total_iters, mean_loss, epoch, i)
-                    log({'epoch': epoch, 'train_loss': mean_loss}, self.opt)
+                    log({'epoch': epoch, 'train_loss': mean_loss, 'lr': self.opt_transformer_lr.get_lr()}, self.opt)
 
                 if it % self.opt.save_latest == 0:
                     self.save(pjoin(self.opt.model_dir, 'latest.tar'), epoch, it)
@@ -917,6 +918,9 @@ class TransformerA2MTrainer(Trainer):
             epoch += 1
             if epoch % self.opt.save_every_e == 0:
                 self.save(pjoin(self.opt.model_dir, 'E%04d.tar' % (epoch)), epoch, total_it=it)
+            if epoch % self.opt.lr_scheduler_every_e == 0:
+                self.step([self.opt_transformer_lr])
+                print(f'current lr: {self.opt_transformer_lr.get_lr()}')
 
             print('Validation time:')
 
@@ -940,7 +944,7 @@ class TransformerA2MTrainer(Trainer):
             print(self.pred_seq.view(self.gold.shape)[0])
 
             print('Validation Loss: %.5f Validation Accuracy: %.4f' % (val_loss, val_accuracy))
-            log({'epoch': epoch, 'eval_loss': val_loss}, self.opt)
+            log({'epoch': epoch, 'eval_loss': val_loss, 'lr': self.opt_transformer_lr.get_lr()}, self.opt)
 
             if val_loss < min_val_loss:
                 min_val_loss = val_loss

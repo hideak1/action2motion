@@ -29,16 +29,17 @@ def mean_variance(data_dir, save_dir, joints_num):
     print(data.shape)
     Mean = data.mean(axis=0)
     Std = data.std(axis=0)
-    Std[0:1] = Std[0:1].mean() / 1.0
-    Std[1:3] = Std[1:3].mean() / 1.0
-    Std[3:4] = Std[3:4].mean() / 1.0
-    Std[4: 4+(joints_num - 1) * 3] = Std[4: 4+(joints_num - 1) * 3].mean() / 1.0
-    Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9] = Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9].mean() / 1.0
-    Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3] = Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3].mean() / 1.0
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3: ] = Std[4 + (joints_num - 1) * 9 + joints_num * 3: ].mean() / 1.0
+    # Std[0:1] = Std[0:1].mean() / 1.0
+    # Std[1:3] = Std[1:3].mean() / 1.0
+    # Std[3:4] = Std[3:4].mean() / 1.0
+    # Std[4: 4+(joints_num - 1) * 3] = Std[4: 4+(joints_num - 1) * 3].mean() / 1.0
+    # Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9] = Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9].mean() / 1.0
+    # Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3] = Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3].mean() / 1.0
+    # Std[4 + (joints_num - 1) * 9 + joints_num * 3: ] = Std[4 + (joints_num - 1) * 9 + joints_num * 3: ].mean() / 1.0
 
-    assert 8 + (joints_num - 1) * 9 + joints_num * 3 == Std.shape[-1]
-
+    # assert 8 + (joints_num - 1) * 9 + joints_num * 3 == Std.shape[-1]
+    Mean = Mean.flatten()
+    Std = Std.flatten()
     np.save(pjoin(save_dir, 'Mean.npy'), Mean)
     np.save(pjoin(save_dir, 'Std.npy'), Std)
 
@@ -46,8 +47,8 @@ def mean_variance(data_dir, save_dir, joints_num):
 
 
 if __name__ == '__main__':
-    data_dir = '../dataset/humanact12/'
-    save_dir = '../dataset/humanact12/zscore'
+    data_dir = 'dataset/humanact12/'
+    save_dir = 'dataset/humanact12/zscore'
     mean, Std = mean_variance(data_dir, save_dir, 24)
     print(mean)
     print(Std)

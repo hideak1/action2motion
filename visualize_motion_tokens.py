@@ -29,11 +29,12 @@ def plot(data, label):
         file_name = os.path.join(result_path, class_type + str(i) + ".gif")
 
         motion_mat = motion_orig
-        for j in range(1, motion_orig.shape[0], 1):
-            offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
-                                        1, joints_num)
+        # for j in range(1, motion_orig.shape[0], 1):
+        #     offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+        #                                 1, joints_num)
 
-            motion_mat[j] = motion_orig[j] + offset
+        #     motion_mat[j] = motion_orig[j] + offset
+        motion_mat = motion_mat * opt.std + opt.mean
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -93,7 +94,7 @@ if __name__ == '__main__':
         joints_num = 24
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
-        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce)
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset = False)
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -117,9 +118,11 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 
-    enc_channels = [opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, input_size]
+    enc_channels = [1024, opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
+    opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
+    opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
 
     vq_decoder, quantizer = build_models(opt)
 

@@ -94,6 +94,9 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 
+    opt.mean = np.load(pjoin(dataset_path, 'zscore', 'Mean.npy'))
+    opt.std = np.load(pjoin(dataset_path, 'zscore', 'Std.npy'))
+
     opt.dim_category = len(data.labels)
     # arbitrary_len won't limit motion length, but the batch size has to be 1
     if opt.arbitrary_len:

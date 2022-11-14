@@ -6,7 +6,7 @@ import utils.paramUtil as paramUtil
 from options.evaluate_options import TestOptions
 from utils.plot_script import *
 
-from networks.transformer import TransformerV5
+from networks.transformer import TransformerV5, TransformerV6
 from networks.quantizer import *
 from networks.modules import *
 from networks.trainers import TransformerA2MTrainer
@@ -27,19 +27,20 @@ def plot(data, label, result_path, do_offset = True):
             os.makedirs(keypoint_path)
         file_name = os.path.join(result_path, class_type + str(i) + ".gif")
 
-
+        motion_mat = motion_orig
         # offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
         #                                 motion_orig.shape[0], joints_num)
 
         # motion_mat = motion_orig - offset
 
-        motion_mat = motion_orig
-        if do_offset:
-            for j in range(1, motion_orig.shape[0], 1):
-                offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
-                                            1, joints_num)
+        # motion_mat = motion_orig
+        # if do_offset:
+        #     for j in range(1, motion_orig.shape[0], 1):
+        #         offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+        #                                     1, joints_num)
 
-                motion_mat[j] = motion_orig[j] + offset
+        #         motion_mat[j] = motion_orig[j] + offset
+        motion_mat = motion_mat * opt.std + opt.mean
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -61,7 +62,7 @@ def build_models(opt):
     vq_decoder.load_state_dict(checkpoint['vq_decoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
 
-    a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
+    a2m_transformer = TransformerV6(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
                                     d_trg_word_vec=12,
                                     d_model=12, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
@@ -136,6 +137,9 @@ if __name__ == '__main__':
 
 
     w_vectorizer = WordVectorizerV2('./glove', 'our_vab')
+    
+    opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
+    opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
 
     n_mot_vocab = opt.codebook_size + 3
     opt.mot_start_idx = opt.codebook_size
@@ -202,6 +206,10 @@ if __name__ == '__main__':
                 pred_tokens = a2m_transformer.sample(word_emb, m_tokens_len, trg_sos=opt.mot_start_idx,
                                                      trg_eos=opt.mot_end_idx, max_steps=80, sample=opt.sample,
                                                      top_k=opt.top_k, input_onehot=True)
+
+                # pred_tokens = a2m_transformer.sample(word_emb, trg_sos=opt.mot_start_idx,
+                #     trg_eos=opt.mot_end_idx, max_steps=80, sample=opt.sample,
+                #     top_k=opt.top_k)
                 pred_tokens = pred_tokens[:, 1:]
                 print('Sampled Tokens %02d'%t)
                 print(pred_tokens[0])

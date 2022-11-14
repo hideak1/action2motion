@@ -20,6 +20,11 @@ if __name__ == '__main__':
     opt = parser.parse()
 
     opt.device = torch.device("cpu" if opt.gpu_id==-1 else "cuda:" + str(opt.gpu_id))
+
+    if opt.use_wandb:
+        import wandb
+        wandb.init(project='ece740-a2m-t', config=opt)
+
     torch.autograd.set_detect_anomaly(True)
     if opt.gpu_id != -1:
         torch.cuda.set_device(opt.gpu_id)
@@ -81,8 +86,8 @@ if __name__ == '__main__':
 
     opt.dim_category = len(data.labels)
 
-    enc_channels = [opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, input_size]
+    enc_channels = [1024, opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
     # if opt.t2m_v2:
     # a2m_transformer = TransformerV5(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
