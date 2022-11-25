@@ -33,14 +33,14 @@ def plot(data, label, result_path, do_offset = True):
 
         # motion_mat = motion_orig - offset
 
-        # motion_mat = motion_orig
-        # if do_offset:
-        #     for j in range(1, motion_orig.shape[0], 1):
-        #         offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
-        #                                     1, joints_num)
+        motion_mat = motion_orig
+        if do_offset:
+            for j in range(1, motion_orig.shape[0], 1):
+                offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+                                            1, joints_num)
 
-        #         motion_mat[j] = motion_orig[j] + offset
-        motion_mat = motion_mat * opt.std + opt.mean
+                motion_mat[j] = motion_orig[j] + offset
+        # motion_mat = motion_mat * opt.std + opt.mean
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         joints_num = 24
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
-        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=False)
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=True)
         enumerator = paramUtil.humanact12_coarse_action_enumerator
         label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
@@ -138,8 +138,8 @@ if __name__ == '__main__':
 
     w_vectorizer = WordVectorizerV2('./glove', 'our_vab')
     
-    opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
-    opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
+    # opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
+    # opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
 
     n_mot_vocab = opt.codebook_size + 3
     opt.mot_start_idx = opt.codebook_size

@@ -33,12 +33,12 @@ def plot(data, label, result_path, do_offset = True):
         file_name = os.path.join(result_path, class_type + str(i) + ".gif")
         motion_mat = motion_orig
 
-        # if do_offset:
-        #     for j in range(1, motion_orig.shape[0], 1):
-        #         offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
-        #                                     1, joints_num)
+        if do_offset:
+            for j in range(1, motion_orig.shape[0], 1):
+                offset = np.matlib.repmat(np.array([motion_orig[j - 1, 0], motion_orig[j - 1, 1], motion_orig[j - 1, 2]]),
+                                            1, joints_num)
 
-        #         motion_mat[j] = motion_orig[j] + offset
+                motion_mat[j] = motion_orig[j] + offset
 
         # offset = np.matlib.repmat(np.array([motion_orig[0, 0], motion_orig[0, 1], motion_orig[0, 2]]),
         #                                 motion_orig.shape[0], joints_num)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.humanact12_raw_offsets
         kinematic_chain = paramUtil.humanact12_kinematic_chain
         enumerator = paramUtil.humanact12_coarse_action_enumerator
-        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=False)
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=True)
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -187,5 +187,5 @@ if __name__ == '__main__':
                     f.write('\n')
                 # _, vq_latents, _, _ = quantizer(pre_latents)
                 # recon_motions = vq_decoder(vq_latents)
-                # plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])), do_offset = False)
-                # plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_3/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])), do_offset = False)
+                # plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_20/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])), do_offset = True)
+                # plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_20/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])), do_offset = True)

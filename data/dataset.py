@@ -611,7 +611,12 @@ class ActionTokenDataset(data.Dataset):
                 m_tokens = m_tokens[1:]
         m_tokens_len = len(m_tokens)
 
-        m_tokens = [self.opt.mot_start_idx] + \
+        classes_to_generate = np.array(label).reshape((-1,))
+        # dim (num_samples, dim_category)
+        one_hot = np.zeros((1, self.opt.dim_category), dtype=np.float32)
+        one_hot[np.arange(1), classes_to_generate] = 1
+
+        m_tokens = [label] + [self.opt.mot_start_idx] + \
                    m_tokens + \
                    [self.opt.mot_end_idx] + \
                    [self.opt.mot_pad_idx] * (self.opt.motion_length - len(m_tokens) - 2)
@@ -640,12 +645,18 @@ class TestActionTokenDataset(data.Dataset):
         for i, data in enumerate(tqdm(dataset)):
                 motion, name = data
                 m_token_list = []
+
+                pose_mat = motion
+                # get the offset and return the final pose
+                for i in range(motion.shape[0] - 1, 0, -1):
+                    offset_mat = np.tile(motion[i - 1, :3], (1, int(motion.shape[-1]/3)))
+                    pose_mat[i] = motion[i] - offset_mat
                 with cs.open(pjoin(opt.data_root, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
                     for line in f.readlines():
                         m_token_list.append(line.strip().split(' '))
                     data_dict[name] = {}
                     data_dict[name]['tokens'] = m_token_list
-                    data_dict[name]['motions'] = motion
+                    data_dict[name]['motions'] = pose_mat
                 self.label_list.append(name)
         self.label_list = list(set(self.label_list))
         self.label_list.sort()
