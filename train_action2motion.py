@@ -13,7 +13,7 @@ from networks.trainers import TransformerA2MTrainer
 from data import dataset
 from torch.utils.data import DataLoader
 from utils.word_vectorizer import WordVectorizerV2
-from data.dataset import ActionTokenDataset
+from data.dataset import ActionTokenDataset, ActionTokenDatasetV2
 
 if __name__ == '__main__':
     parser = Action2MotionOptions()
@@ -126,8 +126,8 @@ if __name__ == '__main__':
 
     trainer = TransformerA2MTrainer(opt, a2m_transformer)
 
-    train_dataset = ActionTokenDataset(data, opt, w_vectorizer)
-    val_dataset = ActionTokenDataset(data, opt, w_vectorizer)
+    train_dataset = ActionTokenDatasetV2(data, opt, w_vectorizer, 0, 0.8)
+    val_dataset = ActionTokenDatasetV2(data, opt, w_vectorizer, 0.8, 1)
 
     train_loader = DataLoader(train_dataset, batch_size=opt.batch_size, drop_last=True, num_workers=0,
                               shuffle=True, pin_memory=False)

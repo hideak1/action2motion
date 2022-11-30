@@ -118,8 +118,8 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 
-    enc_channels = [1024, opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, 1024, input_size]
+    enc_channels = [opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, input_size]
 
     opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
     opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))

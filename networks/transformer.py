@@ -714,9 +714,16 @@ class TransformerV6(nn.Module):
         seq_logit = self.trg_word_prj(dec_output)
         return seq_logit
 
-    def sample(self, src_seq, src_non_pad_lens, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None, input_onehot=False):
-        trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
-
+    def sample(self, label, src_seq, src_non_pad_lens, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None, input_onehot=False):
+        one_hot = [0 for i in range(12)]
+        one_hot[label] = 1
+        one_hot = one_hot + [trg_sos]
+        trg_np = np.array(one_hot, ndmin=2)
+        trg_seq = torch.from_numpy(trg_np).to(src_seq).long()
+        # trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
+        # begin = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
+        # trg_seq = torch.cat((trg_seq, begin), dim=1)
+        
         batch_size, src_seq_len = src_seq.shape[0], src_seq.shape[1]
         src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
         enc_output, *_ = self.encoder(src_seq, src_mask, input_onehot=input_onehot)
@@ -734,7 +741,7 @@ class TransformerV6(nn.Module):
             # print(probs.sort(dim=1)[:top_k])
             # print(torch.topk(probs, k=10, dim=-1))
             _, ix = torch.topk(probs, k=1, dim=-1)
-            if ix[0] == trg_eos:
+            if ix[0] == trg_eos or ix[0] == 0:
                 break
 
             if sample:

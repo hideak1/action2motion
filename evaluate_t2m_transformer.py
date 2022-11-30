@@ -203,14 +203,19 @@ if __name__ == '__main__':
                 #     pred_tokens = t2m_transformer.sample(word_ids, trg_sos=opt.mot_start_idx, trg_eos=opt.mot_end_idx,
                 #                                          max_steps=80, sample=opt.sample, top_k=opt.top_k)
                 # else:
-                pred_tokens = a2m_transformer.sample(word_emb, m_tokens_len, trg_sos=opt.mot_start_idx,
+                pred_tokens = a2m_transformer.sample(label, word_emb, m_tokens_len, trg_sos=opt.mot_start_idx,
                                                      trg_eos=opt.mot_end_idx, max_steps=80, sample=opt.sample,
                                                      top_k=opt.top_k, input_onehot=True)
 
                 # pred_tokens = a2m_transformer.sample(word_emb, trg_sos=opt.mot_start_idx,
                 #     trg_eos=opt.mot_end_idx, max_steps=80, sample=opt.sample,
                 #     top_k=opt.top_k)
-                pred_tokens = pred_tokens[:, 1:]
+                start_idx = 13
+                for idx in range(13, len(pred_tokens[0])):
+                    if pred_tokens[0][idx].item() != opt.mot_start_idx:
+                        start_idx = idx
+                        break
+                pred_tokens = pred_tokens[:, start_idx:]
                 print('Sampled Tokens %02d'%t)
                 print(pred_tokens[0])
                 if len(pred_tokens[0]) == 0:

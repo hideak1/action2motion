@@ -242,6 +242,7 @@ class MotionFolderDatasetHumanAct12V2(data.Dataset):
         with codecs.open(os.path.join(opt.save_root, "label_enc_rev_humanact13.txt"), 'w', 'utf-8') as f:
             for item in self.label_enc_rev.items():
                 f.write(str(item) + "\n")
+        random.shuffle(self.data)
 
     def __len__(self):
         return len(self.data)
@@ -634,6 +635,85 @@ class ActionTokenDataset(data.Dataset):
         one_hot_motion = torch.from_numpy(one_hot).to(self.opt.device).requires_grad_(False)
 
         return one_hot_motion, classes_to_generate
+
+
+class ActionTokenDatasetV2(data.Dataset):
+    def __init__(self, dataset, opt, w_vectorizer, range_start, range_end):
+        self.dataset = dataset
+        self.opt = opt
+        self.w_vectorizer = w_vectorizer
+        data_dict = {}
+        self.data_list = []
+        self.label_list = []
+        for i, data in enumerate(tqdm(dataset)):
+                motion, name = data
+                m_token_list = []
+                with cs.open(pjoin(opt.data_root, opt.tokenizer_name, '%s.txt'%name), 'r') as f:
+                    for line in f.readlines():
+                        tokens = line.strip().split(' ')
+                        m_token_list.append(tokens)
+                        d = {
+                            "name": name,
+                            "tokens": tokens
+                        }
+                        self.data_list.append(d)
+                    data_dict[name] = m_token_list
+                self.label_list.append(name)
+        self.label_list = list(set(self.label_list))
+        self.label_list.sort()
+        self.data_dict = data_dict
+        l = len(self.data_list)
+        self.data_list = self.data_list[int(range_start * l) : int(range_end * l)]
+        random.shuffle(self.data_list)
+
+    def __len__(self):
+        return len(self.data_list)
+
+    def __getitem__(self, item):
+        label = self.data_list[item]['name']
+        cate_one_hot, classes_to_generate = self.get_cate_one_hot(label)
+        m_tokens = self.data_list[item]['tokens']
+        m_tokens = [int(token) for token in m_tokens]
+        coin = np.random.choice([False, False, True])
+        # print(len(m_tokens))
+        if coin:
+            # drop one token at the head or tail
+            coin2 = np.random.choice([True, False])
+            if coin2:
+                m_tokens = m_tokens[:-1]
+            else:
+                m_tokens = m_tokens[1:]
+        m_tokens_len = len(m_tokens)
+
+        classes_to_generate = np.array(label).reshape((-1,))
+        # dim (num_samples, dim_category)
+        one_hot = [0 for i in range(self.opt.dim_category)]
+        one_hot[label] = 1
+
+        m_tokens = one_hot + [self.opt.mot_start_idx] + \
+                   m_tokens + \
+                   [self.opt.mot_end_idx] + \
+                   [self.opt.mot_pad_idx] * (self.opt.motion_length - len(m_tokens) - 2)
+        # print(len(word_embeddings), sent_len, len(m_tokens))
+        m_tokens = np.array(m_tokens, dtype=int)
+        return cate_one_hot, 0, m_tokens, m_tokens_len
+
+    def get_cate_one_hot(self, categorie):
+        classes_to_generate = np.array(categorie).reshape((-1,))
+        # dim (num_samples, dim_category)
+        one_hot = np.zeros((1, self.opt.dim_category), dtype=np.float32)
+        one_hot[np.arange(1), classes_to_generate] = 1
+
+        # dim (num_samples, dim_category)
+        one_hot_motion = torch.from_numpy(one_hot).to(self.opt.device).requires_grad_(False)
+
+        return one_hot_motion, classes_to_generate
+
+    def get_cate_one_hot_arr(self, categorie):
+        one_hot = np.zeros(self.opt.dim_category, dtype=np.int32)
+        one_hot[categorie] = 1
+
+        return one_hot
 
 class TestActionTokenDataset(data.Dataset):
     def __init__(self, dataset, opt, w_vectorizer):

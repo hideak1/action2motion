@@ -179,13 +179,16 @@ if __name__ == '__main__':
                 motion = motion.detach().to(opt.device).float()
                 pre_latents = vq_encoder(motion[..., :-4])
                 indices = quantizer.map2index(pre_latents)
+                indice_np = indices.cpu().numpy()
+                indice_np = torch.from_numpy(np.reshape(indice_np, (1, -1))).to(opt.device).long()
                 indices = list(indices.cpu().numpy())
                 # indices = [start_token] + indices + [end_token] + [pad_token] * (max_length - len(indices) - 2)
                 indices = [str(token) for token in indices]
-                with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
-                    f.write(' '.join(indices))
-                    f.write('\n')
+                # with cs.open(pjoin(token_data_dir, '%s.txt'%int(name[0])), 'a+') as f:
+                #     f.write(' '.join(indices))
+                #     f.write('\n')
                 # _, vq_latents, _, _ = quantizer(pre_latents)
-                # recon_motions = vq_decoder(vq_latents)
-                # plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_20/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])), do_offset = True)
-                # plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_20/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])), do_offset = True)
+                vq_latent = quantizer.get_codebook_entry(indice_np)
+                recon_motions = vq_decoder(vq_latent)
+                plot(motion.cpu().numpy(), name, pjoin("remote_train/test24_20/", 'gen_motion_org_%02d_L%03d' % (i, motion.shape[1])), do_offset = True)
+                plot(recon_motions.cpu().numpy(), name, pjoin("remote_train/test24_20/", 'gen_motion_%02d_L%03d' % (i, motion.shape[1])), do_offset = True)
