@@ -800,7 +800,7 @@ class TransformerA2MTrainer(Trainer):
         m_tokens = m_tokens.detach().to(self.device).long()
         # word_tokens = word_tokens.detach().to(self.device).long()
 
-        trg_input, self.gold = m_tokens[:, :-1], m_tokens[:, 1:]
+        trg_input, self.gold = m_tokens[:, :-1], torch.cat((word_emb.squeeze().long(), m_tokens), axis = 1)[:, 1:]
 
         self.trg_pred = self.transformer(word_emb, trg_input, input_onehot = True, src_non_pad_lens = cap_lens)
 

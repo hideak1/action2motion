@@ -198,6 +198,43 @@ class Decoder(nn.Module):
             return dec_output, dec_slf_attn_list, dec_enc_attn_list
         return dec_output,
 
+class DecoderV6(nn.Module):
+    def __init__(self, n_trg_vocab, d_word_vec, n_layers, n_head, d_k, d_v,
+                 d_model, d_inner, pad_idx, n_position=200, dropout=0.1):
+        super(DecoderV6, self).__init__()
+        self.input_emb = nn.Embedding(2, d_word_vec)
+        self.trg_word_emb = nn.Embedding(n_trg_vocab, d_word_vec, padding_idx=pad_idx)
+        self.position_enc = PositionalEncoding(d_word_vec, max_len=n_position)
+        self.layer_stack = nn.ModuleList([
+            DecoderLayer(d_model, d_inner, n_head, d_k, d_v, dropout=dropout)
+            for _ in range(n_layers)])
+        self.d_model = d_model
+
+    def forward(self, action_one_hot, trg_seq, trg_mask, enc_output, src_mask, return_attns=False):
+        dec_slf_attn_list, dec_enc_attn_list = [], []
+        
+        action_one_hot_s = action_one_hot.squeeze(1).long()
+        action_one_hot_emb = self.input_emb(action_one_hot_s)
+        # action_one_hot_emb_mask = get_pad_mask_idx(action_one_hot_s, -1) & get_subsequent_mask(action_one_hot_s)
+        action_one_hot_emb *= self.d_model ** 0.5
+
+        dec_output = self.trg_word_emb(trg_seq)
+        dec_output *= self.d_model ** 0.5
+
+        dec_output = torch.cat((action_one_hot_emb, dec_output), axis = 1)
+        # trg_mask = torch.cat((action_one_hot_emb_mask, trg_mask), axis = 1)
+
+        dec_output = self.position_enc(dec_output)
+
+        for dec_layer in self.layer_stack:
+            dec_output, dec_slf_attn, dec_enc_attn = dec_layer(
+                dec_output, enc_output, slf_attn_mask=trg_mask, dec_enc_attn_mask=src_mask)
+            dec_slf_attn_list += [dec_slf_attn] if return_attns else []
+            dec_enc_attn_list += [dec_enc_attn] if return_attns else []
+
+        if return_attns:
+            return dec_output, dec_slf_attn_list, dec_enc_attn_list
+        return dec_output,
 
 """Of which the inputs are vectors, outputs are discrete probablities"""
 class DecoderV2(nn.Module):
@@ -684,7 +721,7 @@ class TransformerV6(nn.Module):
             d_v=d_v,  pad_idx=src_pad_idx, dropout=dropout
         )
 
-        self.decoder = Decoder(
+        self.decoder = DecoderV6(
             n_trg_vocab=n_trg_vocab, n_position=n_trg_position, d_word_vec=d_trg_word_vec,
             d_model=d_model, d_inner=d_inner, n_layers=n_dec_layers, n_head=n_head, d_k=d_k,
             d_v=d_v, pad_idx=trg_pad_idx, dropout=dropout
@@ -704,23 +741,24 @@ class TransformerV6(nn.Module):
             src_mask = get_pad_mask_idx(src_seq, self.src_pad_idx)
         elif src_mask is None:
             src_mask = get_pad_mask(batch_size, src_seq_len, src_non_pad_lens).to(src_seq.device)
-        trg_mask = get_pad_mask_idx(trg_seq, self.trg_pad_idx) & get_subsequent_mask(trg_seq)
+
+        trg_mask = get_pad_mask_idx(torch.cat((src_seq.squeeze().long(), trg_seq), axis = 1), self.trg_pad_idx) & get_subsequent_mask(torch.cat((src_seq.squeeze().long(), trg_seq), axis = 1))
 
         # print(src_mask)
         # print(trg_mask)
 
         enc_output, *_ = self.encoder(src_seq, src_mask, input_onehot, input_onehot=input_onehot)
-        dec_output, *_ = self.decoder(trg_seq, trg_mask, enc_output, src_mask)
+        dec_output, *_ = self.decoder(src_seq, trg_seq, trg_mask, enc_output, src_mask)
         seq_logit = self.trg_word_prj(dec_output)
         return seq_logit
 
     def sample(self, label, src_seq, src_non_pad_lens, trg_sos, trg_eos, max_steps=80, sample=False, top_k=None, input_onehot=False):
-        one_hot = [0 for i in range(12)]
-        one_hot[label] = 1
-        one_hot = one_hot + [trg_sos]
-        trg_np = np.array(one_hot, ndmin=2)
-        trg_seq = torch.from_numpy(trg_np).to(src_seq).long()
-        # trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
+        # one_hot = [0 for i in range(12)]
+        # one_hot[label] = 1
+        # one_hot = one_hot + [trg_sos]
+        # trg_np = np.array(one_hot, ndmin=2)
+        # trg_seq = torch.from_numpy(trg_np).to(src_seq).long()
+        trg_seq = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
         # begin = torch.LongTensor(src_seq.size(0), 1).fill_(trg_sos).to(src_seq).long()
         # trg_seq = torch.cat((trg_seq, begin), dim=1)
         
@@ -730,8 +768,9 @@ class TransformerV6(nn.Module):
 
         for _ in range(max_steps):
             # print(trg_seq)
-            trg_mask = get_subsequent_mask(trg_seq)
-            dec_output, *_ = self.decoder(trg_seq, trg_mask, enc_output, src_mask)
+            # trg_mask = get_subsequent_mask(trg_seq)
+            trg_mask = get_subsequent_mask(torch.cat((src_seq.squeeze(1).long(), trg_seq), axis = 1))
+            dec_output, *_ = self.decoder(src_seq, trg_seq, trg_mask, enc_output, src_mask)
             seq_logit = self.trg_word_prj(dec_output)
             logits = seq_logit[:, -1, :]
 

@@ -668,21 +668,28 @@ class ActionTokenDatasetV2(data.Dataset):
 
     def __len__(self):
         return len(self.data_list)
+        # return len(self.data_dict)
 
     def __getitem__(self, item):
         label = self.data_list[item]['name']
-        cate_one_hot, classes_to_generate = self.get_cate_one_hot(label)
         m_tokens = self.data_list[item]['tokens']
+        
+        # label = self.label_list[item]
+        # m_token_list = self.data_dict[label]
+        # m_tokens = m_token_list[0]
+
+        cate_one_hot, classes_to_generate = self.get_cate_one_hot(label)
+        
         m_tokens = [int(token) for token in m_tokens]
-        coin = np.random.choice([False, False, True])
-        # print(len(m_tokens))
-        if coin:
-            # drop one token at the head or tail
-            coin2 = np.random.choice([True, False])
-            if coin2:
-                m_tokens = m_tokens[:-1]
-            else:
-                m_tokens = m_tokens[1:]
+        # coin = np.random.choice([False, False, True])
+        # # print(len(m_tokens))
+        # if coin:
+        #     # drop one token at the head or tail
+        #     coin2 = np.random.choice([True, False])
+        #     if coin2:
+        #         m_tokens = m_tokens[:-1]
+        #     else:
+        #         m_tokens = m_tokens[1:]
         m_tokens_len = len(m_tokens)
 
         classes_to_generate = np.array(label).reshape((-1,))
@@ -690,7 +697,7 @@ class ActionTokenDatasetV2(data.Dataset):
         one_hot = [0 for i in range(self.opt.dim_category)]
         one_hot[label] = 1
 
-        m_tokens = one_hot + [self.opt.mot_start_idx] + \
+        m_tokens = [self.opt.mot_start_idx] + \
                    m_tokens + \
                    [self.opt.mot_end_idx] + \
                    [self.opt.mot_pad_idx] * (self.opt.motion_length - len(m_tokens) - 2)
