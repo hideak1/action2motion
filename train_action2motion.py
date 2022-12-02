@@ -100,9 +100,9 @@ if __name__ == '__main__':
     #                                     )
 
 
-    a2m_transformer = TransformerV6(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=12,
-                                    d_trg_word_vec=12,
-                                    d_model=12, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
+    a2m_transformer = TransformerV6(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=32,
+                                    d_trg_word_vec=32,
+                                    d_model=32, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
                                     dropout=0.1,
                                     n_src_position=50, n_trg_position=100,
