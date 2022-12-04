@@ -44,7 +44,7 @@ def plot(data, label, result_path, do_offset = True):
         #                                 motion_orig.shape[0], joints_num)
         # motion_mat = motion_orig + offset
 
-        motion_mat = motion_mat * opt.std + opt.mean
+        # motion_mat = motion_mat * opt.std + opt.mean
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -108,6 +108,7 @@ if __name__ == '__main__':
         enumerator = paramUtil.mocap_action_enumerator
 
     elif opt.dataset_type == "ntu_rgbd_vibe":
+        opt.data_root = "./dataset"
         file_prefix = "./dataset"
         motion_desc_file = "ntu_vibe_list.txt"
         joints_num = 18
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         kinematic_chain = paramUtil.vibe_kinematic_chain
         label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+                                               extract_joints=paramUtil.kinect_vibe_extract_joints)
         enumerator = paramUtil.ntu_action_enumerator
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
@@ -125,8 +126,8 @@ if __name__ == '__main__':
     # mean = np.load(pjoin(opt.meta_dir, 'mean.npy'))
     # std = np.load(pjoin(opt.meta_dir, 'std.npy'))
 
-    opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
-    opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
+    # opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
+    # opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
 
     # all_split_file = pjoin(opt.data_root, 'all.txt')
 

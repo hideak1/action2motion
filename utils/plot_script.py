@@ -61,6 +61,8 @@ def list_cut_average(ll, intervals):
     if intervals == 1:
         return ll
 
+    ll = [ll]
+
     bins = math.ceil(len(ll) * 1.0 / intervals)
     ll_new = []
     for i in range(bins):

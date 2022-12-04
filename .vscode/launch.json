@@ -12,10 +12,10 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test_241",
-                "--dataset_type", "humanact12",
-                "--batch_size", "128",
-                "--motion_length", "24",
+                "--name", "test2",
+                "--dataset_type", "ntu_rgbd_vibe",
+                "--batch_size", "32",
+                "--motion_length", "60",
                 "--coarse_grained", 
                 "--lambda_kld", "0.001",
                 "--eval_every", "2000",
@@ -24,10 +24,13 @@
                 "--save_every", "2000",
                 "--save_latest", "50",
                 "--time_counter",
+                "--gpu_id", "0",
                 "--iters", "50000",
-                "--n_down", "2",
                 "--n_resblk", "3",
-                "--gpu_id", "0"
+                "--dim_vq_latent", "2048",
+                "--codebook_size", "2048",
+                "--lr_scheduler_every_e", "100",
+                "--n_down", "2"
             ]
         },
         {
@@ -38,15 +41,25 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test_24_16",
-                "--dataset_type", "humanact12",
-                "--batch_size", "1",
-                "--motion_length", "24",
+                "--name", "test2",
+                "--dataset_type", "ntu_rgbd_vibe",
+                "--batch_size", "32",
+                "--motion_length", "60",
+                "--coarse_grained", 
+               // "--lambda_kld", "0.001",
+                //"--eval_every", "2000",
+                //"--plot_every", "50",
+                //"--print_every", "20",
+                //"--save_every", "2000",
+                //"--save_latest", "50",
+                "--time_counter",
+                "--gpu_id", "0",
+                //"--iters", "50000",
                 "--n_resblk", "3",
-                "--coarse_grained",
-                "--n_down", "2",
-                "--dim_vq_latent", "1024",
-                "--codebook_size", "1024"
+                "--dim_vq_latent", "2048",
+                "--codebook_size", "2048",
+               // "--lr_scheduler_every_e", "100",
+                "--n_down", "2"
             //     , 
             //     "--lambda_kld", "0.001",
             //     "--eval_every", "2000",
@@ -66,15 +79,25 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test_24_16",
-                "--dataset_type", "humanact12",
-                "--batch_size", "1",
+                "--name", "test2",
+                "--dataset_type", "ntu_rgbd_vibe",
+                "--batch_size", "32",
                 "--motion_length", "60",
+                "--coarse_grained", 
+                "--lambda_kld", "0.001",
+                "--eval_every", "2000",
+                "--plot_every", "50",
+                "--print_every", "20",
+                "--save_every", "2000",
+                "--save_latest", "50",
+                "--time_counter",
+                "--gpu_id", "0",
+                "--iters", "50000",
                 "--n_resblk", "3",
-                "--coarse_grained",
-                "--n_down", "2",
-                "--dim_vq_latent", "1024",
-                "--codebook_size", "1024"
+                "--dim_vq_latent", "2048",
+                "--codebook_size", "2048",
+                "--lr_scheduler_every_e", "100",
+                "--n_down", "2"
             ]
         },
         {
@@ -86,9 +109,9 @@
             "justMyCode": true,
             "args": [ 
                 "--name", "test2",
-                "--dataset_type", "humanact12",
-                "--batch_size", "6",
-                "--motion_length", "24",
+                "--dataset_type", "ntu_rgbd_vibe",
+                "--batch_size", "32",
+                "--motion_length", "60",
                 "--coarse_grained", 
                 "--lambda_kld", "0.001",
                 "--eval_every", "2000",
@@ -97,8 +120,13 @@
                 "--save_every", "2000",
                 "--save_latest", "50",
                 "--time_counter",
+                "--gpu_id", "0",
                 "--iters", "50000",
-                "--n_down", "1"
+                "--n_resblk", "3",
+                "--dim_vq_latent", "2048",
+                "--codebook_size", "2048",
+                "--lr_scheduler_every_e", "100",
+                "--n_down", "2"
             ]
         },
         {
@@ -109,13 +137,13 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
-                "--name", "test_24_16",
-                "--dataset_type", "humanact12",
+                "--name", "test2",
+                "--dataset_type", "ntu_rgbd_vibe",
                 "--batch_size", "1",
                 "--motion_length", "60",
-                "--n_resblk", "3",
+                // "--n_resblk", "3",
                 "--coarse_grained",
-                "--n_down", "2"
+                "--n_down", "1"
             //     , 
             //     "--lambda_kld", "0.001",
             //     "--eval_every", "2000",
@@ -125,16 +153,6 @@
             //     "--save_latest", "50",
             //     "--time_counter",
             //     "--iters", "50000"
-            ]
-        },
-        {
-            "name": "Python: current",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/scripts/cal_mean_variance.py",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [ 
             ]
         }
 

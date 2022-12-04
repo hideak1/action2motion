@@ -34,7 +34,7 @@ def plot(data, label):
         #                                 1, joints_num)
 
         #     motion_mat[j] = motion_orig[j] + offset
-        motion_mat = motion_mat * opt.std + opt.mean
+        # motion_mat = motion_mat * opt.std + opt.mean
 
         motion_mat = motion_mat.reshape(-1, joints_num, 3)
         np.save(os.path.join(keypoint_path, class_type + str(i) + '_3d.npy'), motion_mat)
@@ -114,15 +114,15 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.vibe_raw_offsets
         kinematic_chain = paramUtil.vibe_kinematic_chain
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+                                              extract_joints=paramUtil.kinect_vibe_extract_joints)
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 
-    enc_channels = [opt.dim_vq_latent]
-    dec_channels = [opt.dim_vq_latent, input_size]
+    enc_channels = [1024, opt.dim_vq_latent]
+    dec_channels = [opt.dim_vq_latent, 1024, input_size]
 
-    opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
-    opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
+    #opt.mean = np.load(pjoin(opt.data_root, 'zscore', 'Mean.npy'))
+    # opt.std = np.load(pjoin(opt.data_root, 'zscore', 'Std.npy'))
 
     vq_decoder, quantizer = build_models(opt)
 

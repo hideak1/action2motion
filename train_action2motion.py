@@ -59,6 +59,7 @@ if __name__ == '__main__':
         data = dataset.MotionFolderDatasetMocap(clip_path, opt.data_root, opt)
 
     elif opt.dataset_type == "ntu_rgbd_vibe":
+        opt.data_root = "./dataset"
         file_prefix = "./dataset"
         motion_desc_file = "ntu_vibe_list.txt"
         joints_num = 18
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.vibe_raw_offsets
         kinematic_chain = paramUtil.vibe_kinematic_chain
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+                                              extract_joints=paramUtil.kinect_vibe_extract_joints)
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 

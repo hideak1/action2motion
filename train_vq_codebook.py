@@ -45,11 +45,13 @@ if __name__ == '__main__':
     opt.device = torch.device("cuda:" + str(opt.gpu_id) if torch.cuda.is_available() else "cpu")
     if opt.use_wandb:
         import wandb
-        wandb.init(project='ece740-a2m', config=opt)
+        wandb.init(project='ece740-a2m-4', config=opt)
     opt.save_root = os.path.join(opt.checkpoints_dir, 'a2m', opt.dataset_type, opt.name, opt.tokenizer_name)
     opt.model_dir = pjoin(opt.save_root, 'model')
     opt.joints_path = os.path.join(opt.save_root, 'joints')
     opt.log_path = os.path.join(opt.save_root, "log.txt")
+    # opt.log_path = './checkpoints/vae/a2m/ntu_rgbd_vibe/test2/motiontokens/log.txt'
+    # print(os.path.isfile(opt.log_path))
     opt.eval_dir = pjoin(opt.save_root, 'animation')
 
     if not os.path.exists(opt.model_dir):
@@ -59,7 +61,7 @@ if __name__ == '__main__':
 
     dataset_path = ""
     joints_num = 0
-    input_size = 72
+    input_size = 54
     data = None
 
     if opt.dataset_type == "humanact12":
@@ -89,7 +91,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.vibe_raw_offsets
         kinematic_chain = paramUtil.vibe_kinematic_chain
         data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
-                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+                                               extract_joints=paramUtil.kinect_vibe_extract_joints)
         label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
@@ -162,4 +164,4 @@ if __name__ == '__main__':
 
     logs = trainer.train(motion_loader, motion_loader)
     plot_loss(logs, os.path.join(opt.save_root, "loss_curve.png"), opt.plot_every)
-    save_logfile(logs, opt.log_path)
+    # save_logfile(logs, opt.log_path)
