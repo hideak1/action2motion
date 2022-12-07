@@ -139,4 +139,3 @@ if __name__ == '__main__':
             gen_motion = vq_decoder(vq_latent)
 
             plot(gen_motion.cpu().numpy(), str(i))
-
