@@ -68,7 +68,7 @@ class MotionFolderDatasetMocap(data.Dataset):
         with codecs.open(os.path.join(opt.save_root, "label_enc_rev_mocap.txt"), 'w', 'utf-8') as f:
             for item in self.label_enc_rev.items():
                 f.write(str(item) + "\n")
-
+        random.shuffle(self.data)
     def __len__(self):
         return len(self.data)
 

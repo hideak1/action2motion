@@ -62,7 +62,7 @@ def build_models(opt):
     vq_decoder.load_state_dict(checkpoint['vq_decoder'])
     quantizer.load_state_dict(checkpoint['quantizer'])
 
-    a2m_transformer = TransformerV6(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=64,
+    a2m_transformer = TransformerV6(opt.vocab_size, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=64,
                                     d_trg_word_vec=64,
                                     d_model=64, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
@@ -108,6 +108,7 @@ if __name__ == '__main__':
         data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=True)
         enumerator = paramUtil.humanact12_coarse_action_enumerator
         label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        opt.vocab_size = 12
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -119,6 +120,7 @@ if __name__ == '__main__':
         data = dataset.MotionFolderDatasetMocap(clip_path, opt.data_root, opt)
         enumerator = paramUtil.mocap_action_enumerator
         label_dec = [0, 1, 2, 3, 4, 5, 6, 7]
+        opt.vocab_size = 8
 
     elif opt.dataset_type == "ntu_rgbd_vibe":
         file_prefix = "./dataset"
@@ -132,6 +134,7 @@ if __name__ == '__main__':
                                               offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
         enumerator = paramUtil.ntu_action_enumerator
         label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
+        opt.vocab_size = 13
     else:
         raise NotImplementedError('This dataset is unregonized!!!')
 

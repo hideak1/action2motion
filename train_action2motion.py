@@ -48,6 +48,7 @@ if __name__ == '__main__':
         kinematic_chain = paramUtil.humanact12_kinematic_chain
         data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset = True)
         label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        n_src_vocab = 12
 
     elif opt.dataset_type == "mocap":
         opt.data_root = "./dataset/mocap/mocap_3djoints/"
@@ -57,6 +58,7 @@ if __name__ == '__main__':
         raw_offsets = paramUtil.mocap_raw_offsets
         kinematic_chain = paramUtil.mocap_kinematic_chain
         data = dataset.MotionFolderDatasetMocap(clip_path, opt.data_root, opt)
+        n_src_vocab = 8
 
     elif opt.dataset_type == "ntu_rgbd_vibe":
         opt.data_root = "./dataset"
@@ -101,7 +103,7 @@ if __name__ == '__main__':
     #                                     )
 
 
-    a2m_transformer = TransformerV6(12, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=64,
+    a2m_transformer = TransformerV6(n_src_vocab, opt.txt_pad_idx, n_mot_vocab, opt.mot_pad_idx, d_src_word_vec=64,
                                     d_trg_word_vec=64,
                                     d_model=64, d_inner=opt.d_inner_hid, n_enc_layers=opt.n_enc_layers,
                                     n_dec_layers=opt.n_dec_layers, n_head=opt.n_head, d_k=opt.d_k, d_v=opt.d_v,
