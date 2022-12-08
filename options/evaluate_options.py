@@ -55,4 +55,6 @@ class TestOptions(BaseOptions):
         self.parser.add_argument('--num_results', type=int, default=40, help='Batch size of pose discriminator')
 
         self.parser.add_argument('--top_k', type=int, default=100)
+
+        self.parser.add_argument('--repeat_times', type=int, default=5)
         self.isTrain = False

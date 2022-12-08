@@ -83,7 +83,7 @@ if __name__ == '__main__':
         label_dec = [0, 1, 2, 3, 4, 5, 6, 7]
 
     elif opt.dataset_type == "ntu_rgbd_vibe":
-        file_prefix = "./dataset"
+        file_prefix = "./dataset/"
         motion_desc_file = "ntu_vibe_list.txt"
         joints_num = 18
         input_size = 54

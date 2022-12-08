@@ -107,7 +107,7 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
         ax.set_zlabel('z')
         if dataset == "mocap":
             ax.set_ylim(-1.5, 1.5)
-            ax.set_xlim(0, 3)
+            ax.set_xlim(-1.5, 1.5)
             ax.set_zlim(-1.5, 1.5)
         else:
             ax.set_ylim(-1, 1)
@@ -134,7 +134,7 @@ def plot_3d_motion_v2(motion, kinematic_tree, save_path, interval=50, dataset=No
         ax.clear()
         if dataset == "mocap":
             ax.set_ylim(-1.5, 1.5)
-            ax.set_xlim(0, 3)
+            ax.set_xlim(-1.5, 1.5)
             ax.set_zlim(-1.5, 1.5)
         else:
             ax.set_ylim(-1, 1)
