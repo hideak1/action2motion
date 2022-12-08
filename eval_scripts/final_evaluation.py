@@ -11,24 +11,33 @@ from motion_loaders.motion_loader import get_motion_loader
 from eval_scripts.fid import calculate_frechet_distance
 from utils.matrix_transformer import MatrixTransformer as mt
 from utils.plot_script import *
+from collections import OrderedDict
+from utils.plot_script import *
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 def evaluate_accuracy(num_motions, gru_classifier, motion_loaders, dataset_opt, device, file):
     print('========== Evaluating Accuracy ==========')
     for motion_loader_name, motion_loader in motion_loaders.items():
-        accuracy = calculate_accuracy(motion_loader, len(dataset_opt.label_dec),
+        accuracy = calculate_accuracy(motion_loader_name, motion_loader, len(dataset_opt.label_dec),
                                       gru_classifier, device)
         print(f'---> [{motion_loader_name}] Accuracy: {np.trace(accuracy)/num_motions:.4f}')
         print(f'---> [{motion_loader_name}] Accuracy: {np.trace(accuracy)/num_motions:.4f}', file=file, flush=True)
 
 
-def calculate_accuracy(motion_loader, num_labels, classifier, device):
+def calculate_accuracy(motion_loader_name, motion_loader, num_labels, classifier, device):
     print('Calculating Accuracies...')
     confusion = torch.zeros(num_labels, num_labels, dtype=torch.long)
 
     with torch.no_grad():
         for idx, batch in enumerate(motion_loader):
             batch_motion, batch_label = batch
+
+            # if motion_loader_name == 'test_transformer_emb_5':
+            #     motion_mat = batch_motion[0].numpy()
+            #     motion_mat = motion_mat.reshape(-1, 24, 3)
+            #     kinematic_chain = paramUtil.humanact12_kinematic_chain
+            #     plot_3d_motion_v2(motion_mat, kinematic_chain, save_path="output/test.gif", interval=80)
+            
             batch_motion = torch.clone(batch_motion).float().detach_().to(device)
             batch_label = torch.clone(batch_label).long().detach_().to(device)
             batch_prob, _ = classifier(batch_motion, None)
@@ -134,9 +143,96 @@ def calculate_diversity_multimodality(activations, labels, num_labels):
 
     return diversity, multimodality
 
+# def evaluation(log_file):
+#     with open(log_file, 'w') as f:
+#         all_metrics = OrderedDict({'Matching Score': OrderedDict({}),
+#                                    'R_precision': OrderedDict({}),
+#                                    'FID': OrderedDict({}),
+#                                    'Diversity': OrderedDict({}),
+#                                    'MultiModality': OrderedDict({})})
+#         for replication in range(replication_times):
+#             motion_loaders = {}
+#             mm_motion_loaders = {}
+#             motion_loaders['ground truth'] = gt_loader
+#             for motion_loader_name, motion_loader_getter in eval_motion_loaders.items():
+#                 motion_loader, mm_motion_loader = motion_loader_getter()
+#                 motion_loaders[motion_loader_name] = motion_loader
+#                 mm_motion_loaders[motion_loader_name] = mm_motion_loader
+
+#             print(f'==================== Replication {replication} ====================')
+#             print(f'==================== Replication {replication} ====================', file=f, flush=True)
+#             print(f'Time: {datetime.now()}')
+#             print(f'Time: {datetime.now()}', file=f, flush=True)
+#             mat_score_dict, R_precision_dict, acti_dict = evaluate_matching_score(motion_loaders, f)
+
+#             print(f'Time: {datetime.now()}')
+#             print(f'Time: {datetime.now()}', file=f, flush=True)
+#             fid_score_dict = evaluate_fid(gt_loader, acti_dict, f)
+
+#             print(f'Time: {datetime.now()}')
+#             print(f'Time: {datetime.now()}', file=f, flush=True)
+#             div_score_dict = evaluate_diversity(acti_dict, f)
+
+#             print(f'Time: {datetime.now()}')
+#             print(f'Time: {datetime.now()}', file=f, flush=True)
+#             mm_score_dict = evaluate_multimodality(mm_motion_loaders, f)
+
+#             print(f'!!! DONE !!!')
+#             print(f'!!! DONE !!!', file=f, flush=True)
+
+#             for key, item in mat_score_dict.items():
+#                 if key not in all_metrics['Matching Score']:
+#                     all_metrics['Matching Score'][key] = [item]
+#                 else:
+#                     all_metrics['Matching Score'][key] += [item]
+
+#             for key, item in R_precision_dict.items():
+#                 if key not in all_metrics['R_precision']:
+#                     all_metrics['R_precision'][key] = [item]
+#                 else:
+#                     all_metrics['R_precision'][key] += [item]
+
+#             for key, item in fid_score_dict.items():
+#                 if key not in all_metrics['FID']:
+#                     all_metrics['FID'][key] = [item]
+#                 else:
+#                     all_metrics['FID'][key] += [item]
+
+#             for key, item in div_score_dict.items():
+#                 if key not in all_metrics['Diversity']:
+#                     all_metrics['Diversity'][key] = [item]
+#                 else:
+#                     all_metrics['Diversity'][key] += [item]
+
+#             for key, item in mm_score_dict.items():
+#                 if key not in all_metrics['MultiModality']:
+#                     all_metrics['MultiModality'][key] = [item]
+#                 else:
+#                     all_metrics['MultiModality'][key] += [item]
+
+
+#         # print(all_metrics['Diversity'])
+#         for metric_name, metric_dict in all_metrics.items():
+#             print('========== %s Summary ==========' % metric_name)
+#             print('========== %s Summary ==========' % metric_name, file=f, flush=True)
+
+#             for model_name, values in metric_dict.items():
+#                 # print(metric_name, model_name)
+#                 mean, conf_interval = get_metric_statistics(np.array(values))
+#                 # print(mean, mean.dtype)
+#                 if isinstance(mean, np.float64) or isinstance(mean, np.float32):
+#                     print(f'---> [{model_name}] Mean: {mean:.4f} CInterval: {conf_interval:.4f}')
+#                     print(f'---> [{model_name}] Mean: {mean:.4f} CInterval: {conf_interval:.4f}', file=f, flush=True)
+#                 elif isinstance(mean, np.ndarray):
+#                     line = f'---> [{model_name}]'
+#                     for i in range(len(mean)):
+#                         line += '(top %d) Mean: %.4f CInt: %.4f;' % (i+1, mean[i], conf_interval[i])
+#                     print(line)
+#                     print(line, file=f, flush=True)
+
 def evaluation(log_file):
     with open(log_file, 'w') as f:
-        for replication in range(20):
+        for replication in range(1):
             motion_loaders = {}
             motion_loaders['ground truth'] = ground_truth_motion_loader
             for motion_loader_name, motion_loader_getter in eval_motion_loaders.items():
@@ -201,14 +297,17 @@ def animation_4_user_study(save_dir, motion_loaders):
 
 if __name__ == '__main__':
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     #dataset_opt_path = './checkpoints/vae/ntu_rgbd_vibe/vae_velocS_f0001_t01_trj10_rela/opt.txt'
     #dataset_opt_path = './checkpoints/vae/humanact12/vae_velocR_f0001_t001_trj10_rela_fineG/opt.txt'
-    dataset_opt_path = './checkpoints/vae/humanact12/test_transformer_emb_5/opt.txt'
-    label_spe = 3
+    #dataset_opt_path = './checkpoints/vae/humanact12/test_transformer_emb_5/opt.txt'
+    dataset_opt_path = './checkpoints/vae/mocap/test_mocap_t_1/opt.txt'
+
+    dataset_opt = get_opt(dataset_opt_path, device)
     eval_motion_loaders = {
-        'test_transformer_emb_5': lambda num_motions, device: get_motion_loader(
-            './checkpoints/vae/humanact12/test_transformer_emb_5/opt.txt',
-            num_motions, 128, device, ground_truth_motion_loader, label_spe),
+        'test_transformer_emb_5': lambda num_motions, device: get_motion_loader(dataset_opt),
+        'test_mocap_t_1': lambda num_motions, device: get_motion_loader(dataset_opt),
         #'vae_velocS_f0001_t01_trj10_rela': lambda num_motions, device: get_motion_loader(
         #    './checkpoints/vae/mocap/vae_velocS_f0001_t01_trj10_rela/opt.txt',
         #    num_motions, 128, device, ground_truth_motion_loader, label_spe),
@@ -241,7 +340,7 @@ if __name__ == '__main__':
         # 'vanilla_vae_lie_mse_kld01': lambda num_motions, device: get_motion_loader(
         #     './checkpoints/vae/ntu_rgbd_vibe/vanilla_vae_lie_mse_kld01/opt.txt',
         #     num_motions, 128, device, ground_truth_motion_loader),
-        #'ground_truth': lambda num_motions, device: get_dataset_motion_loader(
+        # 'ground_truth': lambda num_motions, device: get_dataset_motion_loader(
         #    get_opt(dataset_opt_path, num_motions, device), num_motions, device),
         # 'vanila_vae_tf': lambda num_motions, device: get_motion_loader(
         #     './checkpoints/vae/humanact12/vanilla_vae_tf_fineG/opt.txt',
@@ -261,18 +360,17 @@ if __name__ == '__main__':
         #      num_motions, 128, device),
     }
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    torch.cuda.set_device(0)
+   
     num_motions = 12
     # num_motions = 200
 
     #dataset_opt = get_opt(dataset_opt_path, num_motions, device)
-    dataset_opt = get_opt(dataset_opt_path, device)
+    
     # print(dataset_opt)
     gru_classifier_for_fid = load_classifier_for_fid(dataset_opt, device)
     gru_classifier = load_classifier(dataset_opt, device)
 
-    ground_truth_motion_loader = get_dataset_motion_loader(dataset_opt, num_motions, device, label=label_spe)
+    ground_truth_motion_loader = get_dataset_motion_loader(dataset_opt)
     motion_loaders = {}
     # motion_loaders['ground_truth'] = ground_truth_motion_loader
     '''
@@ -283,5 +381,5 @@ if __name__ == '__main__':
     animation_4_user_study(save_dir, motion_loaders)
     
     '''
-    log_file = 'final_evaluation_mocap_veloc_label3_bk.log'
+    log_file = 'output/evaluation.log'
     evaluation(log_file)

@@ -1,31 +1,47 @@
-from data.dataset import Text2MotionDatasetV2, TestActionTokenDataset
-from motion_loaders.motion_loader import collate_fn
-from utils.word_vectorizer import WordVectorizer
 import numpy as np
 from os.path import join as pjoin
 from torch.utils.data import DataLoader
 from utils.get_opt import get_opt
+from utils import paramUtil
+from data import dataset
 
-def get_dataset_motion_loader(opt_path, batch_size, device):
-    opt = get_opt(opt_path, device)
+def get_dataset_motion_loader(opt, batch_size = 1):
+    if opt.dataset_type == "humanact12":
+        opt.data_root = "./dataset/humanact12"
+        input_size = 72
+        joints_num = 24
+        raw_offsets = paramUtil.humanact12_raw_offsets
+        kinematic_chain = paramUtil.humanact12_kinematic_chain
+        data = dataset.MotionFolderDatasetHumanAct12V2(opt.data_root, opt, lie_enforce=opt.lie_enforce, do_offset=True)
+        enumerator = paramUtil.humanact12_coarse_action_enumerator
+        label_dec = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-    # Configurations of T2M dataset and KIT dataset is almost the same
-    if opt.dataset_name == 'humanact12' or opt.dataset_name == 'mocap':
-        print('Loading dataset %s ...' % opt.dataset_name)
+    elif opt.dataset_type == "mocap":
+        opt.data_root = "./dataset/mocap/mocap_3djoints/"
+        clip_path = './dataset/mocap/pose_clip.csv'
+        input_size = 60
+        joints_num = 20
+        raw_offsets = paramUtil.mocap_raw_offsets
+        kinematic_chain = paramUtil.mocap_kinematic_chain
+        data = dataset.MotionFolderDatasetMocap(clip_path, opt.data_root, opt)
+        enumerator = paramUtil.mocap_action_enumerator
+        label_dec = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        mean = np.load(pjoin(opt.meta_dir, 'mean.npy'))
-        std = np.load(pjoin(opt.meta_dir, 'std.npy'))
-
-        w_vectorizer = WordVectorizer('./glove', 'our_vab')
-        split_file = pjoin(opt.data_root, 'test.txt')
-        dataset = Text2MotionDatasetV2(opt, mean, std, split_file, w_vectorizer)
-        dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=4, drop_last=True,
-                                collate_fn=collate_fn, shuffle=True)
-
-        #dataset = TestActionTokenDataset(data, opt, w_vectorizer)
-        #data_loader = DataLoader(dataset, batch_size=opt.batch_size,num_workers=0, shuffle=True, pin_memory=False)
+    elif opt.dataset_type == "ntu_rgbd_vibe":
+        file_prefix = "./dataset"
+        motion_desc_file = "ntu_vibe_list.txt"
+        joints_num = 18
+        input_size = 54
+        labels = paramUtil.ntu_action_labels
+        raw_offsets = paramUtil.vibe_raw_offsets
+        kinematic_chain = paramUtil.vibe_kinematic_chain
+        data = dataset.MotionFolderDatasetNtuVIBE(file_prefix, motion_desc_file, labels, opt, joints_num=joints_num,
+                                              offset=True, extract_joints=paramUtil.kinect_vibe_extract_joints)
+        enumerator = paramUtil.ntu_action_enumerator
+        label_dec = [6, 7, 8, 9, 22, 23, 24, 38, 80, 93, 99, 100, 102]
     else:
-        raise KeyError('Dataset not Recognized !!')
-
+        raise NotImplementedError('This dataset is unregonized!!!')
+    
+    motion_loader = DataLoader(data, batch_size=batch_size, num_workers=1)
     print('Ground Truth Dataset Loading Completed!!!')
-    return dataloader, dataset
+    return motion_loader

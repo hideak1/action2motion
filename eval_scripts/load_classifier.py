@@ -11,8 +11,8 @@ classifier_model_files = {
 
 
 def load_classifier(opt, device):
-    model = torch.load(classifier_model_files[opt.dataset_type])
-    classifier = MotionDiscriminator(opt.input_size_raw, 128, 2, len(opt.label_dec)).to(device)
+    model = torch.load(classifier_model_files[opt.dataset_type], map_location=torch.device('cpu'))
+    classifier = MotionDiscriminator(opt.input_size, 128, 2, len(opt.label_dec)).to(device)
     classifier.load_state_dict(model['model'])
     classifier.eval()
 
@@ -33,9 +33,9 @@ class MotionDiscriminatorForFID(MotionDiscriminator):
 
 
 def load_classifier_for_fid(opt, device):
-    model = torch.load(classifier_model_files[opt.dataset_type])
+    model = torch.load(classifier_model_files[opt.dataset_type], map_location=torch.device('cpu'))
     # print(len(opt.label_dec))
-    classifier = MotionDiscriminatorForFID(opt.input_size_raw, 128, 2, len(opt.label_dec)).to(device)
+    classifier = MotionDiscriminatorForFID(opt.input_size, 128, 2, len(opt.label_dec)).to(device)
     classifier.load_state_dict(model['model'])
     classifier.eval()
 
