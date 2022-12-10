@@ -90,6 +90,8 @@ mocap_action_enumerator = {
     7: "Climb"
 }
 
+mocap_action_enumerator_rev = {v: k for k, v in mocap_action_enumerator.items()}
+
 humanact12_coarse_action_enumerator = {
     1: "warm_up",
     2: "walk",
@@ -104,6 +106,9 @@ humanact12_coarse_action_enumerator = {
     11: "boxing",
     12: "throw",
 }
+
+humanact12_coarse_action_enumerator_rev = {v: k for k, v in humanact12_coarse_action_enumerator.items()}
+
 
 humanact12_fine_action_enumerator = {
     101: "warm_up_wristankle",
