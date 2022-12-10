@@ -133,7 +133,7 @@
             "name": "Python: evaluation",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/evaluate_t2m_transformer.py",
+            "program": "${workspaceFolder}/evaluate_a2m_transformer.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [ 
