@@ -20,8 +20,8 @@ def evaluate_accuracy(num_motions, gru_classifier, motion_loaders, dataset_opt, 
     for motion_loader_name, motion_loader in motion_loaders.items():
         accuracy = calculate_accuracy(motion_loader_name, motion_loader, len(dataset_opt.label_dec),
                                       gru_classifier, device)
-        print(f'---> [{motion_loader_name}] Accuracy: {np.trace(accuracy)/num_motions:.4f}')
-        print(f'---> [{motion_loader_name}] Accuracy: {np.trace(accuracy)/num_motions:.4f}', file=file, flush=True)
+        print(f'---> [{motion_loader_name}] Accuracy: {np.trace(accuracy)/len(motion_loader.dataset):.4f}')
+        print(f'---> [{motion_loader_name}] Accuracy: {np.trace(accuracy)/len(motion_loader.dataset):.4f}', file=file, flush=True)
 
 
 def calculate_accuracy(motion_loader_name, motion_loader, num_labels, classifier, device):
@@ -301,13 +301,13 @@ if __name__ == '__main__':
 
     #dataset_opt_path = './checkpoints/vae/ntu_rgbd_vibe/vae_velocS_f0001_t01_trj10_rela/opt.txt'
     #dataset_opt_path = './checkpoints/vae/humanact12/vae_velocR_f0001_t001_trj10_rela_fineG/opt.txt'
-    #dataset_opt_path = './checkpoints/vae/humanact12/test_transformer_emb_5/opt.txt'
-    dataset_opt_path = './checkpoints/vae/mocap/test_mocap_t_1/opt.txt'
+    dataset_opt_path = './checkpoints/vae/humanact12/test_transformer_emb_5/opt.txt'
+    # dataset_opt_path = './checkpoints/vae/mocap/test_mocap_t_1/opt.txt'
 
     dataset_opt = get_opt(dataset_opt_path, device)
     eval_motion_loaders = {
         'test_transformer_emb_5': lambda num_motions, device: get_motion_loader(dataset_opt),
-        'test_mocap_t_1': lambda num_motions, device: get_motion_loader(dataset_opt),
+        # 'test_mocap_t_1': lambda num_motions, device: get_motion_loader(dataset_opt),
         #'vae_velocS_f0001_t01_trj10_rela': lambda num_motions, device: get_motion_loader(
         #    './checkpoints/vae/mocap/vae_velocS_f0001_t01_trj10_rela/opt.txt',
         #    num_motions, 128, device, ground_truth_motion_loader, label_spe),
